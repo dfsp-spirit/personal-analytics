@@ -27,7 +27,7 @@ const FORM_CONFIG = {
         min: 0,
         max: 10,
         scaleLabels: ['0 - None', '10 - Extreme'],
-        required: false,
+        required: true,
         default: 0,
         parse: (value) => parseInt(value)
     },
@@ -37,7 +37,7 @@ const FORM_CONFIG = {
         min: 0,
         max: 10,
         scaleLabels: ['0 - Exhausted', '10 - Very energetic'],
-        required: false,
+        required: true,
         default: 5,
         parse: (value) => parseInt(value)
     },
@@ -261,6 +261,14 @@ const FORM_CONFIG = {
             return result;
         }
     },
+    daily_comments: {
+        type: 'textarea',
+        label: 'Additional notes or comments (optional)',
+        placeholder: 'Anything unusual today? Specific pain locations? Mood triggers? Things that helped?',
+        required: false,
+        default: '',
+        parse: (value) => value.trim() || null
+    }
 };
 
 // Helper function to flatten all checkbox options

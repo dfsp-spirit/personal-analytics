@@ -34,9 +34,35 @@ function generateFormField(fieldName, config) {
         case 'checkbox-group':
             wrapper.appendChild(generateCheckboxGroup(fieldName, config));
             break;
+        case 'textarea':
+            wrapper.appendChild(generateTextarea(fieldName, config));
+            break;
     }
 
     return wrapper;
+}
+
+function generateTextarea(fieldName, config) {
+    const container = document.createElement('div');
+
+    const textarea = document.createElement('textarea');
+    textarea.id = fieldName;
+    textarea.name = fieldName;
+    textarea.placeholder = config.placeholder || '';
+    textarea.rows = 4;
+    textarea.style.width = '100%';
+    textarea.style.padding = '12px';
+    textarea.style.border = '2px solid #e1e8ed';
+    textarea.style.borderRadius = '8px';
+    textarea.style.fontFamily = 'inherit';
+    textarea.style.fontSize = '0.95rem';
+
+    if (config.default) {
+        textarea.value = config.default;
+    }
+
+    container.appendChild(textarea);
+    return container;
 }
 
 function generateSlider(fieldName, config) {
