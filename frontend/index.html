@@ -66,6 +66,10 @@
             const nextDayBtn = document.getElementById('next-day');
             nextDayBtn.disabled = currentDate >= today;
 
+            // Also disable the today button if already today
+            const todayBtn = document.getElementById('today-btn');
+            todayBtn.disabled = isToday(currentDate);
+
             // Update form title
             const dateDisplay = document.querySelector('h2.date-display');
             if (isToday(currentDate)) {
