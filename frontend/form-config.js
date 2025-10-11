@@ -330,21 +330,34 @@ const FormUtils = {
 
     // Set default values on form reset
     setFormDefaults: function() {
-        Object.entries(FORM_CONFIG).forEach(([fieldName, config]) => {
-            if (config.default !== undefined) {
-                const element = document.getElementById(fieldName);
-                if (element) {
-                    if (config.type === 'radio') {
-                        const radio = document.querySelector(`input[name="${fieldName}"][value="${config.default}"]`);
-                        if (radio) radio.checked = true;
-                    } else {
-                        element.value = config.default;
-                    }
+    // First reset the entire form to clear all values
+    document.getElementById('healthForm').reset();
+
+    // Then set defaults for each field
+    Object.entries(FORM_CONFIG).forEach(([fieldName, config]) => {
+        const element = document.getElementById(fieldName);
+        if (element) {
+            if (config.type === 'radio') {
+                // Set default radio button
+                const radio = document.querySelector(`input[name="${fieldName}"][value="${config.default}"]`);
+                if (radio) radio.checked = true;
+            } else if (config.type === 'checkbox-group') {
+                // Uncheck all checkboxes in the group
+                const checkboxes = document.querySelectorAll(`input[name="${fieldName}"]`);
+                checkboxes.forEach(cb => cb.checked = false);
+            } else if (config.default !== undefined) {
+                // Set default value for other field types
+                element.value = config.default;
+            } else {
+                // For fields without defaults, ensure they're empty
+                // This fixes the textarea issue
+                if (config.type === 'textarea' || element.tagName === 'TEXTAREA') {
+                    element.value = '';
                 }
             }
-        });
-    },
-
+        }
+    });
+},
     // Collect all form data with proper parsing
     collectFormData: function() {
         const formData = {

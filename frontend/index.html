@@ -162,6 +162,7 @@ async function loadEntryForDate(date) {
                 // Clear form if no entry exists
                 FormUtils.setFormDefaults();
                 updateSliderDisplays();
+                console.log(`No existing entry found for ${date}. Presenting empty form.`);
             }
         }
     } catch (error) {
