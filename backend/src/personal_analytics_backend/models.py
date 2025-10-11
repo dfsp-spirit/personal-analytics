@@ -1,4 +1,3 @@
-# backend/src/personal_analytics/models.py
 from datetime import datetime
 from typing import Optional, Dict, Any
 from sqlmodel import SQLModel, Field, Column
@@ -6,7 +5,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 import uuid
 
 class HealthEntryBase(SQLModel):
-    date: str = Field(index=True, unique=True)  # One entry per day
+    date: str = Field(index=True, unique=True)
     timestamp: datetime = Field(default_factory=datetime.now)
 
     # Core metrics
@@ -44,3 +43,28 @@ class HealthEntry(HealthEntryBase, table=True):
         default_factory=lambda: str(uuid.uuid4()),
         primary_key=True
     )
+
+# For API - SQLModel handles serialization automatically
+class HealthEntryCreate(HealthEntryBase):
+    pass
+
+class HealthEntryRead(HealthEntryBase):
+    id: str
+
+class HealthEntryUpdate(SQLModel):
+    # All fields optional for updates
+    mood: Optional[int] = None
+    pain: Optional[int] = None
+    anxiety: Optional[int] = None
+    energy: Optional[int] = None
+    allergy_state: Optional[int] = None
+    allergy_medication: Optional[int] = None
+    had_sex: Optional[int] = None
+    sleep_quality: Optional[int] = None
+    stress_level_work: Optional[int] = None
+    stress_level_home: Optional[int] = None
+    social_support: Optional[int] = None
+    physical_activity: Optional[int] = None
+    weather_enjoyment: Optional[int] = None
+    daily_activities: Optional[Dict[str, Any]] = None
+    daily_comments: Optional[str] = None

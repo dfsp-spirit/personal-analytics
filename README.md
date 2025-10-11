@@ -62,6 +62,6 @@ uv pip install -e ".[dev]"
 To run it once its installed:
 
 ```sh
-cd backend
-uvicorn personal_analytics.api:app --reload --host 0.0.0.0 --port 8000
+# still in <repo>/backend/
+uvicorn personal_analytics_backend.api:app --reload --host 0.0.0.0 --port 8000
 ```
