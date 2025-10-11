@@ -100,6 +100,8 @@ function changeDate(days) {
             return;
         }
     }
+
+    FormUtils.setFormDefaults(); // Prevent carrying over local, unsaved changes to new date.
     currentDate.setDate(currentDate.getDate() + days);
     updateDateDisplay();
     hasUnsavedChanges = false;
