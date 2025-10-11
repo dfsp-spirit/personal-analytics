@@ -25,10 +25,11 @@ cd frontend/
 code .
 ```
 
-To run, just open `index.html` in your browser:
+To run it:
 
 ```sh
-firefox ./index.html
+# we are still in <repo>/frontend/
+python -m http.server 3000
 ```
 
 
