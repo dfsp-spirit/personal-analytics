@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Personal Analytics</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Personal Analytics</h1>
+        </header>
+        <form id="healthForm"></form>
+    </div>
+
+    <script src="form-config.js"></script>
+    <script src="form-generator.js"></script>
+    <script>
+        // Generate the entire form
+        const form = document.getElementById('healthForm');
+
+        Object.entries(FORM_CONFIG).forEach(([fieldName, config]) => {
+            form.appendChild(generateFormField(fieldName, config));
+        });
+
+        // Add submit button
+        const submitBtn = document.createElement('button');
+        submitBtn.type = 'submit';
+        submitBtn.textContent = 'Save Entry';
+        form.appendChild(submitBtn);
+
+        // Form submission
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = {
+                date: new Date().toISOString().split('T')[0],
+                timestamp: new Date().toISOString()
+            };
+
+            // Collect all field values
+            Object.entries(FORM_CONFIG).forEach(([fieldName, config]) => {
+                let value;
+
+                if (config.type === 'radio') {
+                    const selected = document.querySelector(`input[name="${fieldName}"]:checked`);
+                    value = selected ? selected.value : null;
+                    // Apply encoding if specified
+                    if (config.encoding && value) {
+                        value = config.encoding[value];
+                    }
+                } else {
+                    value = document.getElementById(fieldName).value;
+                }
+
+                formData[fieldName] = value ? parseInt(value) : null;
+            });
+
+            console.log('Form data:', formData);
+            saveToStorage(formData); // Your storage function
+            alert('Data saved!');
+            this.reset();
+        });
+    </script>
+</body>
+</html>
