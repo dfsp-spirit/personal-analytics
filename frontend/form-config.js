@@ -143,45 +143,116 @@ const FORM_CONFIG = {
     },
     daily_activities: {
         type: 'checkbox-group',
-        label: 'Today\'s Activities (select all that apply)',
+        label: 'Today\'s Activities & Factors',
         categories: {
             'general': {
-                'positive_events': 'Positive Events',
-                'negative_events': 'Negative Events',
-                'work': 'Did work today (as opposed to day off or weekend)',
-                'chores': 'Exceptional or many Chores/Errands',
+                'positive_events': {
+                    short: 'Positive Events',
+                    long: 'Exceptional Positive Events'
+                },
+                'negative_events': {
+                    short: 'Negative Events',
+                    long: 'Exceptional Negative Events'
+                },
+                'work': {
+                    short: 'Work Day',
+                    long: 'Did work today (as opposed to day off or weekend)'
+                },
+                'chores': {
+                    short: 'Many Chores',
+                    long: 'Exceptional or many Chores/Errands'
+                }
             },
             'activities': {
-                'gaming': 'Gaming',
-                'computer_creative_work': 'Computer Creative Work',
-                'creative': 'Other Creative Activity (e.g., Drawing/Music)',
-                'reading': 'Reading',
-                'outdoor': 'Outdoor Activities (e.g., Biking/Hiking/Walking)',
-                'exercise': 'Exercise/Sports',
-                'tv_movies': 'TV/Movies',
-                'smartphone': 'Smartphone (e.g., Browsing, Apps)',
-                'social_media': 'Social Media',
-                'learning': 'Learning (e.g., Language, Course)',
+                'gaming': {
+                    short: 'Gaming',
+                    long: 'Gaming on Computer/Console/Phone'
+                },
+                'computer_creative_work': {
+                    short: 'Creative PC Work',
+                    long: 'Computer Creative Work'
+                },
+                'creative': {
+                    short: 'Creative Other',
+                    long: 'Other Creative Activity (e.g., Drawing/Music)'
+                },
+                'reading': {
+                    short: 'Reading',
+                    long: 'Reading for Leisure (e.g., Book, Magazine)'
+                },
+                'outdoor': {
+                    short: 'Outdoor',
+                    long: 'Outdoor Activities (e.g., Biking/Hiking/Walking)'
+                },
+                'exercise': {
+                    short: 'Exercise',
+                    long: 'Exercise/Sports'
+                },
+                'tv_movies': {
+                    short: 'TV/Movies',
+                    long: 'TV/Movies/Youtube'
+                },
+                'smartphone': {
+                    short: 'Smartphone',
+                    long: 'Smartphone (e.g., Browsing, Apps)'
+                },
+                'social_media': {
+                    short: 'Social Media',
+                    long: 'Social Media'
+                },
+                'learning': {
+                    short: 'Learning',
+                    long: 'Learning (e.g., Language, Course)'
+                }
             },
             'social': {
-                'family_time': 'Quality Family Time (not just co-located)',
-                'relationship_time': 'Quality Time with Partner',
-                'phone_call': 'Phone/Video Call with Friend/Family',
-                'neighbors': 'Interaction with Neighbors or Acquaintances, parents of child\'s friends, etc.',
-                'friends': 'Met Friend(s) in Person, active visiting or inviting',
-                'social_outing': 'Social Outing (e.g., Bar, Party, Event)',
+                'family_time': {
+                    short: 'Family Time',
+                    long: 'Quality Family Time'
+                },
+                'relationship_time': {
+                    short: 'Partner Time',
+                    long: 'Quality Time with Partner'
+                },
+                'phone_call': {
+                    short: 'Call Friends',
+                    long: 'Phone/Video Call with Friends or Family'
+                },
+                'neighbors': {
+                    short: 'Neighbors',
+                    long: 'Interaction with Neighbors or Acquaintances, parents of child\'s friends'
+                },
+                'friends': {
+                    short: 'Friends',
+                    long: 'Met Friend in Person, active visiting or inviting'
+                },
+                'social_outing': {
+                    short: 'Social Outing',
+                    long: 'Social Outing (Bar, Party, Concert, Event)'
+                }
             },
             'eating': {
-                'ate_too_much': 'Ate Too Much',
-                'ate_too_little': 'Ate Too Little or skipped meal',
-                'eating_out': 'Ate Out (e.g., Restaurant, Takeaway, Party. Not including eating out during lunch break at work.)',
-                'liked_food': 'Ate Food I Liked a Lot',
+                'ate_too_much': {
+                    short: 'Ate Too Much',
+                    long: 'Ate Too Much'
+                },
+                'ate_too_little': {
+                    short: 'Ate Too Little',
+                    long: 'Ate Too Little or skipped meal'
+                },
+                'eating_out': {
+                    short: 'Ate Out',
+                    long: 'Ate Out (Restaurant, Party)'
+                },
+                'liked_food': {
+                    short: 'Liked Food',
+                    long: 'Ate Food I Liked a Lot'
+                }
             }
         },
         required: false,
-        default: {}, // Empty object for none selected
+        default: {},
         parse: (selectedValues) => {
-            // Convert to binary object: {gaming: 1, reading: 0, ...}
             const allOptions = getAllCheckboxOptions(FORM_CONFIG.daily_activities.categories);
             const result = {};
             allOptions.forEach(option => {
@@ -189,7 +260,7 @@ const FORM_CONFIG = {
             });
             return result;
         }
-    }
+    },
 };
 
 // Helper function to flatten all checkbox options

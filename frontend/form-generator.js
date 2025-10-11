@@ -196,9 +196,14 @@ function generateCheckboxGroup(fieldName, config) {
         const optionsContainer = document.createElement('div');
         optionsContainer.className = 'checkbox-options';
 
-        Object.entries(options).forEach(([value, label]) => {
+        Object.entries(options).forEach(([value, labelConfig]) => {
             const labelElement = document.createElement('label');
             labelElement.className = 'checkbox-option';
+
+            // Only add tooltip if short and long labels are different
+            if (labelConfig.short !== labelConfig.long) {
+                labelElement.setAttribute('data-tooltip', labelConfig.long);
+            }
 
             const input = document.createElement('input');
             input.type = 'checkbox';
@@ -206,8 +211,10 @@ function generateCheckboxGroup(fieldName, config) {
             input.value = value;
             input.className = 'checkbox-input';
 
+            const shortText = document.createTextNode(labelConfig.short);
+
             labelElement.appendChild(input);
-            labelElement.appendChild(document.createTextNode(label));
+            labelElement.appendChild(shortText);
             optionsContainer.appendChild(labelElement);
         });
 
@@ -216,4 +223,13 @@ function generateCheckboxGroup(fieldName, config) {
     });
 
     return container;
+}
+
+// Helper function updated for new structure
+function getAllCheckboxOptions(categories) {
+    const options = [];
+    Object.values(categories).forEach(category => {
+        options.push(...Object.keys(category));
+    });
+    return options;
 }

@@ -300,19 +300,19 @@ button[type="submit"]:hover {
     box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
 }
 
-/* Checkbox Group Styles */
+/* Checkbox Group Styles - Compact with Tooltips */
 .checkbox-group-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    display: flex;
+    flex-direction: column;
     gap: 20px;
-    margin-top: 10px;
+    margin-top: 8px;
 }
 
 .checkbox-category {
     background: #f8f9fa;
     padding: 15px;
     border-radius: 8px;
-    border-left: 3px solid #3498db;
+    border-left: 4px solid #3498db;
 }
 
 .checkbox-category-title {
@@ -324,9 +324,9 @@ button[type="submit"]:hover {
 }
 
 .checkbox-options {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 6px; /* Reduced gap */
 }
 
 .checkbox-option {
@@ -334,18 +334,56 @@ button[type="submit"]:hover {
     align-items: center;
     font-weight: normal;
     cursor: pointer;
-    padding: 6px 0;
-    font-size: 0.9rem;
+    padding: 4px 0; /* Reduced padding */
+    font-size: 0.85rem;
+    position: relative;
 }
 
 .checkbox-input {
-    margin-right: 8px;
-    transform: scale(1.1);
+    margin-right: 6px; /* Reduced margin */
+    transform: scale(1);
+}
+
+/* Tooltip styles */
+.checkbox-option {
+    position: relative;
+}
+
+/* Simple fix - only show if content exists */
+.checkbox-option:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 0;
+    top: 100%;
+    background: #2c3e50;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    display: block;
+}
+
+/* Hide if no tooltip content */
+.checkbox-option:not([data-tooltip]):hover::after,
+.checkbox-option[data-tooltip=""]:hover::after {
+    display: none;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .checkbox-group-container {
+    .checkbox-options {
         grid-template-columns: 1fr;
+        gap: 4px;
+    }
+
+    .checkbox-category {
+        padding: 12px;
+    }
+
+    .checkbox-option {
+        padding: 3px 0;
     }
 }
