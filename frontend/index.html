@@ -59,26 +59,43 @@
                 submitBtn.textContent = 'Saving...';
                 submitBtn.disabled = true;
 
-                const response = await fetch(`${API_BASE_URL}/entries/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData)
-                });
+                // In the form submission try block:
+            const response = await fetch(`${API_BASE_URL}/entries/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            });
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.detail || 'Failed to save data');
-                }
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Failed to save data');
+            }
 
-                const result = await response.json();
-                console.log('Data saved successfully:', result);
-                alert('Data saved successfully!');
+            const result = await response.json();
 
-                this.reset();
-                FormUtils.setFormDefaults();
-                updateSliderDisplays();
+            // Check operation type from header (will be 'created' or 'updated', depending on whether entry for today existed)
+            const operation = response.headers.get('X-Operation');
+            let message;
+
+            switch(operation) {
+                case 'created':
+                    message = 'New entry created successfully!';
+                    break;
+                case 'updated':
+                    message = 'Entry updated successfully!';
+                    break;
+                default:
+                    message = 'Data saved successfully!';
+            }
+
+            console.log(message, result);
+            alert(message);
+
+            this.reset();
+            FormUtils.setFormDefaults();
+            updateSliderDisplays();
 
             } catch (error) {
                 console.error('Error saving data:', error);

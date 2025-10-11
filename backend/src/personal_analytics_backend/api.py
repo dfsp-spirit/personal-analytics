@@ -22,29 +22,46 @@ app.add_middleware(
 def on_startup():
     create_db_and_tables()
 
+
+from fastapi import Response
+from typing import Dict, Any
+
 @app.post("/entries/", response_model=HealthEntryRead)
 def submit_entry(entry: HealthEntryCreate, session: Session = Depends(get_session)):
-    """Submit a new daily health entry"""
-
-    # Check if entry for today already exists
     today = datetime.now().date().isoformat()
     existing_entry = session.exec(
         select(HealthEntry).where(HealthEntry.date == today)
     ).first()
 
     if existing_entry:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Entry for today ({today}) already exists. Use PUT to update."
+        # Update existing entry
+        update_data = entry.dict(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(existing_entry, field, value)
+
+        session.add(existing_entry)
+        session.commit()
+        session.refresh(existing_entry)
+
+        return Response(
+             content=existing_entry.json(),
+             status_code=200,
+             headers={"X-Operation": "updated"}
         )
 
-    # Create new entry
-    db_entry = HealthEntry.from_orm(entry)
-    session.add(db_entry)
-    session.commit()
-    session.refresh(db_entry)
+    else:
+        # Create new entry
+        db_entry = HealthEntry.from_orm(entry)
+        session.add(db_entry)
+        session.commit()
+        session.refresh(db_entry)
 
-    return db_entry
+        return Response(
+             content=db_entry.json(),
+             status_code=201,
+             headers={"X-Operation": "created"}
+        )
+
 
 @app.put("/entries/{entry_id}", response_model=HealthEntryRead)
 def update_entry(entry_id: str, entry_update: HealthEntryUpdate, session: Session = Depends(get_session)):
