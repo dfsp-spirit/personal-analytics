@@ -52,7 +52,7 @@ const FORM_CONFIG = {
         encoding: { 'none': 0, 'other': 1, 'face': 2 },
         required: true,
         default: 'none',
-        parse: (value) => FORM_CONFIG.allergy.encoding[value]
+        parse: (value) => FORM_CONFIG.allergy_state.encoding[value]
     },
     allergy_medication: {
         type: 'select',
@@ -117,17 +117,7 @@ const FORM_CONFIG = {
         min: 0,
         max: 10,
         scaleLabels: ['0 - Very poor', '10 - Excellent'],
-        required: false,
-        default: 5,
-        parse: (value) => parseInt(value)
-    },
-    productivity: {
-        type: 'slider',
-        label: 'Productivity/accomplishment?',
-        min: 0,
-        max: 10,
-        scaleLabels: ['0 - Very low', '10 - Very high'],
-        required: false,
+        required: true,
         default: 5,
         parse: (value) => parseInt(value)
     },
@@ -137,8 +127,18 @@ const FORM_CONFIG = {
         options: {
             '0': 'Almost None (e.g., Home office + minimal movement)', '1': 'Light (e.g., cycle to work)', '2': 'Moderate (e.g., work out, sports club)', '3': 'Vigorous (e.g., very long run, competitive sports)'
         },
-        required: false,
+        required: true,
         default: '0',
+        parse: (value) => parseInt(value)
+    },
+    weather_enjoyment: {
+        type: 'slider',
+        label: 'How much did you enjoy today\'s weather?',
+        min: 0,
+        max: 10,
+        scaleLabels: ['0 - Hated it', '10 - Loved it'],
+        required: true,
+        default: 5,
         parse: (value) => parseInt(value)
     },
     daily_activities: {
