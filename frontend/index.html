@@ -29,38 +29,53 @@
         submitBtn.textContent = 'Save Entry';
         form.appendChild(submitBtn);
 
-        // Form submission
+        // In your main script - replace the form submission part:
         form.addEventListener('submit', function(e) {
             e.preventDefault();
 
-            const formData = {
-                date: new Date().toISOString().split('T')[0],
-                timestamp: new Date().toISOString()
-            };
-
-            // Collect all field values
-            Object.entries(FORM_CONFIG).forEach(([fieldName, config]) => {
-                let value;
-
-                if (config.type === 'radio') {
-                    const selected = document.querySelector(`input[name="${fieldName}"]:checked`);
-                    value = selected ? selected.value : null;
-                    // Apply encoding if specified
-                    if (config.encoding && value) {
-                        value = config.encoding[value];
-                    }
-                } else {
-                    value = document.getElementById(fieldName).value;
-                }
-
-                formData[fieldName] = value ? parseInt(value) : null;
-            });
+            const formData = FormUtils.collectFormData();
 
             console.log('Form data:', formData);
-            saveToStorage(formData); // Your storage function
+            saveToStorage(formData);
             alert('Data saved!');
-            this.reset();
+
+            // Reset to defaults instead of empty
+            FormUtils.setFormDefaults();
         });
+
+        // Set defaults when page loads
+        window.addEventListener('load', function() {
+            FormUtils.setFormDefaults();
+
+            // Optional: Load today's existing data
+            const today = new Date().toISOString().split('T')[0];
+            const existingData = JSON.parse(localStorage.getItem('healthData') || '[]');
+            const todaysEntry = existingData.find(entry => entry.date === today);
+
+
+            if (todaysEntry) {
+                if (confirm('You already have an entry for today. Load it?')) {
+                    FormUtils.loadDataIntoForm(todaysEntry);
+                }
+            }
+        });
+
+        function saveToStorage(entry) {
+            const existingData = JSON.parse(localStorage.getItem('healthData') || '[]');
+
+            // Check if an entry for today already exists
+            const todayIndex = existingData.findIndex(e => e.date === entry.date);
+            if (todayIndex !== -1) {
+                // Update existing entry
+                existingData[todayIndex] = entry;
+            } else {
+                // Add new entry
+                existingData.push(entry);
+            }
+
+            localStorage.setItem('healthData', JSON.stringify(existingData));
+        }
+
     </script>
 </body>
 </html>
