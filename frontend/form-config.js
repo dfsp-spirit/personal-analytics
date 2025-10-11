@@ -194,7 +194,7 @@ const FORM_CONFIG = {
                 },
                 'smartphone': {
                     short: 'Smartphone',
-                    long: 'Smartphone (e.g., Browsing, Apps)'
+                    long: 'Longer Smartphone Use (e.g., Browsing, Apps)'
                 },
                 'social_media': {
                     short: 'Social Media',
@@ -231,7 +231,7 @@ const FORM_CONFIG = {
                     long: 'Social Outing (Bar, Party, Concert, Event)'
                 }
             },
-            'eating': {
+            'eating & drinking': {
                 'ate_too_much': {
                     short: 'Ate Too Much',
                     long: 'Ate Too Much'
@@ -244,9 +244,13 @@ const FORM_CONFIG = {
                     short: 'Ate Out',
                     long: 'Ate Out (Restaurant, Party)'
                 },
-                'liked_food': {
-                    short: 'Liked Food',
+                'great_food': {
+                    short: 'Great Food',
                     long: 'Ate Food I Liked a Lot'
+                },
+                'alcohol': {
+                    short: 'Alcohol',
+                    long: 'Consumed Alcoholic Beverages'
                 }
             }
         },
