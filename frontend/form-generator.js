@@ -31,6 +31,9 @@ function generateFormField(fieldName, config) {
         case 'radio':
             wrapper.appendChild(generateRadio(fieldName, config));
             break;
+        case 'checkbox-group':
+            wrapper.appendChild(generateCheckboxGroup(fieldName, config));
+            break;
     }
 
     return wrapper;
@@ -175,4 +178,42 @@ function updateSliderDisplays() {
             }
         }
     });
+}
+
+function generateCheckboxGroup(fieldName, config) {
+    const container = document.createElement('div');
+    container.className = 'checkbox-group-container';
+
+    Object.entries(config.categories).forEach(([categoryName, options]) => {
+        const categoryDiv = document.createElement('div');
+        categoryDiv.className = 'checkbox-category';
+
+        const categoryTitle = document.createElement('div');
+        categoryTitle.className = 'checkbox-category-title';
+        categoryTitle.textContent = categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
+        categoryDiv.appendChild(categoryTitle);
+
+        const optionsContainer = document.createElement('div');
+        optionsContainer.className = 'checkbox-options';
+
+        Object.entries(options).forEach(([value, label]) => {
+            const labelElement = document.createElement('label');
+            labelElement.className = 'checkbox-option';
+
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            input.name = fieldName;
+            input.value = value;
+            input.className = 'checkbox-input';
+
+            labelElement.appendChild(input);
+            labelElement.appendChild(document.createTextNode(label));
+            optionsContainer.appendChild(labelElement);
+        });
+
+        categoryDiv.appendChild(optionsContainer);
+        container.appendChild(categoryDiv);
+    });
+
+    return container;
 }
