@@ -161,6 +161,14 @@ const FORM_CONFIG = {
                 'chores': {
                     short: 'Many Chores',
                     long: 'Exceptional or many Chores/Errands'
+                },
+                'sick': {
+                    short: 'Sick',
+                    long: 'Was sick (cold, flu, etc.)'
+                },
+                'other_medication': {
+                    short: 'Other Medication',
+                    long: 'Took other medication (not allergy, e.g., painkillers, antibiotics)'
                 }
             },
             'activities': {
@@ -238,7 +246,7 @@ const FORM_CONFIG = {
                 },
                 'ate_too_little': {
                     short: 'Ate Too Little',
-                    long: 'Ate Too Little or skipped meal'
+                    long: 'Ate Too Little or Skipped Meal'
                 },
                 'eating_out': {
                     short: 'Ate Out',
@@ -251,7 +259,12 @@ const FORM_CONFIG = {
                 'alcohol': {
                     short: 'Alcohol',
                     long: 'Consumed Alcoholic Beverages'
+                },
+                'other_drugs': {
+                    short: 'Other Drugs',
+                    long: 'Consumed Other Drugs'
                 }
+
             }
         },
         required: false,
