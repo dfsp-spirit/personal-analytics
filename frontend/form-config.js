@@ -61,11 +61,11 @@ const FORM_CONFIG = {
         type: 'select',
         label: 'Anti-Allergic Drug Taken',
         options: {
-            0: '0 - None',
-            1: '1 - Half pill',
-            2: '2 - One pill',
-            3: '3 - 1.5 pills',
-            4: '4 - Two pills'
+            0: 'None',
+            1: 'Half pill',
+            2: 'One pill',
+            3: '1.5 pills',
+            4: 'Two pills'
         },
         required: true,
         default: 0,
@@ -79,7 +79,6 @@ const FORM_CONFIG = {
             1: 'Yes, with self',
             2: 'Yes, with partner'
         },
-        encoding: { 0: 0, 1: 1, 2: 2 },
         required: true,
         default: 0,
         parse: (value) => parseInt(value)
@@ -386,31 +385,52 @@ const FormUtils = {
         return formData;
     },
 
-    // Load existing data into form
     loadDataIntoForm: function(data) {
-        Object.entries(FORM_CONFIG).forEach(([fieldName, config]) => {
-            if (data[fieldName] !== undefined) {
+    console.log('Loading data into form:', data);
+    Object.entries(FORM_CONFIG).forEach(([fieldName, config]) => {
+        if (data[fieldName] !== undefined && data[fieldName] !== null) {
+            console.log(`  Field: ${fieldName}, Value: ${data[fieldName]}, Type: ${config.type}`);
+
+            if (config.type === 'radio') {
+                console.log(`    Setting radio for ${fieldName} with value:`, data[fieldName]);
+                // For radio, we need to find the key that matches the value
+                let valueToSet;
+                if (config.encoding) {
+                    // Reverse lookup in encoding
+                    valueToSet = Object.keys(config.encoding).find(
+                        key => config.encoding[key] === data[fieldName]
+                    );
+                } else {
+                    valueToSet = data[fieldName].toString();
+                }
+
+                const radio = document.querySelector(`input[name="${fieldName}"][value="${valueToSet}"]`);
+                console.log(`    Radio with encoding: dbValue=${data[fieldName]}, found key=${valueToSet}`);
+                console.log(`    Radio element found:`, radio);
+                if (radio) radio.checked = true;
+
+            } else if (config.type === 'checkbox-group') {
+                console.log(`    Checkbox group:`, data[fieldName]);
+                // Handle checkbox groups - check boxes based on the data
+                Object.keys(data[fieldName]).forEach(activity => {
+                    if (data[fieldName][activity] === 1) {
+                        const checkbox = document.querySelector(`input[name="${fieldName}"][value="${activity}"]`);
+                        if (checkbox) checkbox.checked = true;
+                    }
+                });
+
+            } else {
+                // For other field types, use getElementById
                 const element = document.getElementById(fieldName);
                 if (element) {
-                    if (config.type === 'radio') {
-                        // For radio, we need to find the key that matches the value
-                        let valueToSet;
-                        if (config.encoding) {
-                            // Reverse lookup in encoding
-                            valueToSet = Object.keys(config.encoding).find(
-                                key => config.encoding[key] === data[fieldName]
-                            );
-                        } else {
-                            valueToSet = data[fieldName].toString();
-                        }
-
-                        const radio = document.querySelector(`input[name="${fieldName}"][value="${valueToSet}"]`);
-                        if (radio) radio.checked = true;
-                    } else {
-                        element.value = data[fieldName];
-                    }
+                    console.log(`    Setting value for ${fieldName}:`, data[fieldName]);
+                    element.value = data[fieldName];
+                } else {
+                    console.warn(`Element with id ${fieldName} not found in the form.`);
                 }
             }
-        });
-    }
+        }
+    });
+}
+
 };

@@ -36,7 +36,7 @@ def submit_entry(entry: HealthEntryCreate, session: Session = Depends(get_sessio
 
     if existing_entry:
         # Update existing entry - EXCLUDE DATE from updates
-        update_data = entry.dict(exclude_unset=True, exclude={'date'})  # ← Critical: exclude date
+        update_data = entry.dict(exclude_unset=True, exclude={'date'})  # Critical: exclude date
         for field, value in update_data.items():
             setattr(existing_entry, field, value)
 
@@ -71,7 +71,7 @@ def update_entry(entry_id: str, entry_update: HealthEntryUpdate, session: Sessio
         raise HTTPException(status_code=404, detail="Entry not found")
 
     # Update fields - EXCLUDE DATE to prevent unique constraint violations
-    update_data = entry_update.dict(exclude_unset=True, exclude={'date'})  # ← Add exclude here too
+    update_data = entry_update.dict(exclude_unset=True, exclude={'date'})
     for field, value in update_data.items():
         setattr(db_entry, field, value)
 
