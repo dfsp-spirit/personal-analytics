@@ -30,6 +30,7 @@
         form.appendChild(submitBtn);
 
         // In your main script - replace the form submission part:
+        /*
         form.addEventListener('submit', function(e) {
             e.preventDefault();
 
@@ -42,20 +43,91 @@
             // Reset to defaults instead of empty
             FormUtils.setFormDefaults();
         });
+        */
 
-        // Set defaults when page loads
-        window.addEventListener('load', function() {
+        // Form submission
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+
+            try {
+                // Show loading state
+                submitBtn.textContent = 'Saving...';
+                submitBtn.disabled = true;
+
+                const formData = FormUtils.collectFormData();
+
+                // Send to backend API
+                const response = await fetch(`${API_BASE_URL}/entries/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to save data');
+                }
+
+                const result = await response.json();
+                console.log('Data saved successfully:', result);
+
+                alert('Data saved successfully!');
+                this.reset();
+                FormUtils.setFormDefaults();
+                updateSliderDisplays();
+
+            } catch (error) {
+                console.error('Error saving data:', error);
+
+                // Fallback to localStorage
+                console.log('Falling back to localStorage...');
+                saveToStorage(formData);
+                alert('Saved to local storage (API unavailable)');
+
+            } finally {
+                // Restore button state
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+
+
+                // Set defaults when page loads
+        window.addEventListener('load', async function() {
             FormUtils.setFormDefaults();
+            updateSliderDisplays();
 
-            // Optional: Load today's existing data
-            const today = new Date().toISOString().split('T')[0];
-            const existingData = JSON.parse(localStorage.getItem('healthData') || '[]');
-            const todaysEntry = existingData.find(entry => entry.date === today);
+            try {
+                // Check if today's entry already exists in backend
+                const response = await fetch(`${API_BASE_URL}/entries/today`);
 
+                if (response.ok) {
+                    const todaysEntry = await response.json();
 
-            if (todaysEntry) {
-                if (confirm('You already have an entry for today. Load it?')) {
-                    FormUtils.loadDataIntoForm(todaysEntry);
+                    if (todaysEntry) {
+                        if (confirm('You already have an entry for today. Load it?')) {
+                            FormUtils.loadDataIntoForm(todaysEntry);
+                            updateSliderDisplays();
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log('API unavailable, checking localStorage...');
+                // Fallback to localStorage check
+                const today = new Date().toISOString().split('T')[0];
+                const existingData = JSON.parse(localStorage.getItem('healthData') || '[]');
+                const todaysEntry = existingData.find(entry => entry.date === today);
+
+                if (todaysEntry) {
+                    if (confirm('You already have an entry for today in local storage. Load it?')) {
+                        FormUtils.loadDataIntoForm(todaysEntry);
+                        updateSliderDisplays();
+                    }
                 }
             }
         });

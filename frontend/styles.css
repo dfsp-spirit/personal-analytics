@@ -408,3 +408,29 @@ textarea:focus {
 textarea::placeholder {
     color: #95a5a6;
 }
+
+/* Loading and error states */
+.submit-button:disabled {
+    background: #7fb3d5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 12px;
+    border-radius: 8px;
+    margin: 10px 0;
+    border: 1px solid #f5c6cb;
+}
+
+.success-message {
+    background: #d4edda;
+    color: #155724;
+    padding: 12px;
+    border-radius: 8px;
+    margin: 10px 0;
+    border: 1px solid #c3e6cb;
+}
