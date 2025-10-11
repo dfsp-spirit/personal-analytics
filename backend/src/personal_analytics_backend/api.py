@@ -28,14 +28,15 @@ from typing import Dict, Any
 
 @app.post("/entries/", response_model=HealthEntryRead)
 def submit_entry(entry: HealthEntryCreate, session: Session = Depends(get_session)):
-    today = datetime.now().date().isoformat()
+    # Use the date from the submitted entry, not today!
+    target_date = entry.date
     existing_entry = session.exec(
-        select(HealthEntry).where(HealthEntry.date == today)
+        select(HealthEntry).where(HealthEntry.date == target_date)  # ← Changed from today to target_date
     ).first()
 
     if existing_entry:
-        # Update existing entry
-        update_data = entry.dict(exclude_unset=True)
+        # Update existing entry - EXCLUDE DATE from updates
+        update_data = entry.dict(exclude_unset=True, exclude={'date'})  # ← Critical: exclude date
         for field, value in update_data.items():
             setattr(existing_entry, field, value)
 
@@ -48,7 +49,6 @@ def submit_entry(entry: HealthEntryCreate, session: Session = Depends(get_sessio
              status_code=200,
              headers={"X-Operation": "updated"}
         )
-
     else:
         # Create new entry
         db_entry = HealthEntry.from_orm(entry)
@@ -62,7 +62,6 @@ def submit_entry(entry: HealthEntryCreate, session: Session = Depends(get_sessio
              headers={"X-Operation": "created"}
         )
 
-
 @app.put("/entries/{entry_id}", response_model=HealthEntryRead)
 def update_entry(entry_id: str, entry_update: HealthEntryUpdate, session: Session = Depends(get_session)):
     """Update an existing health entry"""
@@ -71,8 +70,8 @@ def update_entry(entry_id: str, entry_update: HealthEntryUpdate, session: Sessio
     if not db_entry:
         raise HTTPException(status_code=404, detail="Entry not found")
 
-    # Update fields
-    update_data = entry_update.dict(exclude_unset=True)
+    # Update fields - EXCLUDE DATE to prevent unique constraint violations
+    update_data = entry_update.dict(exclude_unset=True, exclude={'date'})  # ← Add exclude here too
     for field, value in update_data.items():
         setattr(db_entry, field, value)
 
