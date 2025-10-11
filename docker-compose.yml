@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: personal-analytics-db
+    environment:
+      POSTGRES_DB: personal_analytics
+      POSTGRES_USER: analytics_user
+      POSTGRES_PASSWORD: your_secure_password_here
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U analytics_user -d personal_analytics"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: personal-analytics-api
+    environment:
+      DATABASE_URL: postgresql://analytics_user:your_secure_password_here@postgres:5432/personal_analytics
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend/src:/app/src
+    command: uvicorn personal_analytics_backend.api:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: personal-analytics-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    environment:
+      - API_BASE_URL=http://localhost:8000
+
+volumes:
+  postgres_data:

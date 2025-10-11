@@ -66,3 +66,27 @@ To run it once its installed:
 # still in <repo>/backend/
 uvicorn personal_analytics_backend.api:app --reload --host 0.0.0.0 --port 8000
 ```
+
+
+## Alternative: Docker for both Frontend and Backend in containers
+
+```sh
+# Start everything
+docker-compose up -d
+
+# Check logs
+docker-compose logs -f
+
+# Stop everything
+docker-compose down
+
+# Stop and remove volumes (full cleanup)
+docker-compose down -v
+```
+
+Access your services:
+
+* Frontend: http://localhost:3000
+* Backend API: http://localhost:8000
+* API Docs: http://localhost:8000/docs
+* PostgreSQL: localhost:5432
