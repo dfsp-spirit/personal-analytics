@@ -16,6 +16,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Operation"]
 )
 
 @app.on_event("startup")
@@ -62,24 +63,6 @@ def submit_entry(entry: HealthEntryCreate, session: Session = Depends(get_sessio
              headers={"X-Operation": "created"}
         )
 
-@app.put("/entries/{entry_id}", response_model=HealthEntryRead)
-def update_entry(entry_id: str, entry_update: HealthEntryUpdate, session: Session = Depends(get_session)):
-    """Update an existing health entry"""
-
-    db_entry = session.get(HealthEntry, entry_id)
-    if not db_entry:
-        raise HTTPException(status_code=404, detail="Entry not found")
-
-    # Update fields - EXCLUDE DATE to prevent unique constraint violations
-    update_data = entry_update.dict(exclude_unset=True, exclude={'date'})
-    for field, value in update_data.items():
-        setattr(db_entry, field, value)
-
-    session.add(db_entry)
-    session.commit()
-    session.refresh(db_entry)
-
-    return db_entry
 
 @app.get("/entries/", response_model=List[HealthEntryRead])
 def read_all_entries(

@@ -53,8 +53,14 @@
         submitBtn.textContent = 'Save Entry';
         form.appendChild(submitBtn);
 
+        // Track unsaved changes to warn on date change
+        form.addEventListener('change', function() {
+            hasUnsavedChanges = true;
+        });
+
         // Date management
         let currentDate = new Date();
+        let hasUnsavedChanges = false;
 
         function updateDateDisplay() {
             const dateInput = document.getElementById('entry-date');
@@ -89,8 +95,14 @@
         }
 
 function changeDate(days) {
+    if (hasUnsavedChanges) {
+        if (!confirm('You have unsaved changes. Switch date anyway?')) {
+            return;
+        }
+    }
     currentDate.setDate(currentDate.getDate() + days);
     updateDateDisplay();
+    hasUnsavedChanges = false;
 }
 
 function setToToday() {
@@ -132,11 +144,13 @@ form.addEventListener('submit', async function(e) {
 
         const result = await response.json();
         const operation = response.headers.get('X-Operation');
+        console.log('X-Operation from header:', operation);
         const message = operation === 'created' ?
             '🎉 New entry created!' : '✏️ Entry updated!';
 
         console.log(message, result);
         alert(message);
+        hasUnsavedChanges = false;
 
     } catch (error) {
         console.error('Error saving data:', error);
