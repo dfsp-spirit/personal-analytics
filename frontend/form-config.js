@@ -386,13 +386,13 @@ const FormUtils = {
     },
 
     loadDataIntoForm: function(data) {
-    console.log('Loading data into form:', data);
+    //console.log('Loading data into form:', data);
     Object.entries(FORM_CONFIG).forEach(([fieldName, config]) => {
         if (data[fieldName] !== undefined && data[fieldName] !== null) {
-            console.log(`  Field: ${fieldName}, Value: ${data[fieldName]}, Type: ${config.type}`);
+            //console.log(`  Field: ${fieldName}, Value: ${data[fieldName]}, Type: ${config.type}`);
 
             if (config.type === 'radio') {
-                console.log(`    Setting radio for ${fieldName} with value:`, data[fieldName]);
+                //console.log(`    Setting radio for ${fieldName} with value:`, data[fieldName]);
                 // For radio, we need to find the key that matches the value
                 let valueToSet;
                 if (config.encoding) {
@@ -405,12 +405,12 @@ const FormUtils = {
                 }
 
                 const radio = document.querySelector(`input[name="${fieldName}"][value="${valueToSet}"]`);
-                console.log(`    Radio with encoding: dbValue=${data[fieldName]}, found key=${valueToSet}`);
-                console.log(`    Radio element found:`, radio);
+                //console.log(`    Radio with encoding: dbValue=${data[fieldName]}, found key=${valueToSet}`);
+                //console.log(`    Radio element found:`, radio);
                 if (radio) radio.checked = true;
 
             } else if (config.type === 'checkbox-group') {
-                console.log(`    Checkbox group:`, data[fieldName]);
+                //console.log(`    Checkbox group:`, data[fieldName]);
                 // Handle checkbox groups - check boxes based on the data
                 Object.keys(data[fieldName]).forEach(activity => {
                     if (data[fieldName][activity] === 1) {
@@ -423,7 +423,7 @@ const FormUtils = {
                 // For other field types, use getElementById
                 const element = document.getElementById(fieldName);
                 if (element) {
-                    console.log(`    Setting value for ${fieldName}:`, data[fieldName]);
+                    //console.log(`    Setting value for ${fieldName}:`, data[fieldName]);
                     element.value = data[fieldName];
                 } else {
                     console.warn(`Element with id ${fieldName} not found in the form.`);
