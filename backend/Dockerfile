@@ -8,6 +8,9 @@ RUN pip install uv
 # Copy dependency files
 COPY pyproject.toml ./
 
+# Create virtual environment
+RUN uv venv
+
 # Install dependencies
 RUN uv pip install -e .
 
