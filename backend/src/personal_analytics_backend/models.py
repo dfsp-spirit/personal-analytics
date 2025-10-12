@@ -2,11 +2,18 @@ from datetime import datetime
 from typing import Optional, Dict, Any
 from sqlmodel import SQLModel, Field, Column
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import Integer
+import calendar
 import uuid
 
 class HealthEntryBase(SQLModel):
     date: str = Field(index=True, unique=True)
     timestamp: datetime = Field(default_factory=datetime.now)
+    day_of_week: int = Field(  # Store in DB for querying
+        sa_column=Column(Integer),
+        ge=0, le=6,  # 0=Monday, 6=Sunday
+        description="0=Monday, 1=Tuesday, ..., 6=Sunday"
+    )
 
     # Core metrics
     mood: int = Field(ge=0, le=10)
@@ -43,6 +50,15 @@ class HealthEntry(HealthEntryBase, table=True):
         default_factory=lambda: str(uuid.uuid4()),
         primary_key=True
     )
+    @property
+    def is_weekend(self) -> bool:
+        """Convenience property: Saturday=5, Sunday=6"""
+        return self.day_of_week >= 5
+
+    @property
+    def day_name(self) -> str:
+        """Convenience property to get day name"""
+        return calendar.day_name[self.day_of_week]
 
 # For API - SQLModel handles serialization automatically
 class HealthEntryCreate(HealthEntryBase):

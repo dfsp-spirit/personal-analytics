@@ -31,6 +31,11 @@ from typing import Dict, Any
 def submit_entry(entry: HealthEntryCreate, session: Session = Depends(get_session)):
     # Use the date from the submitted entry, not today!
     target_date = entry.date
+
+    # Calculate day_of_week from the date (Monday=0, Sunday=6)
+    date_obj = datetime.strptime(target_date, "%Y-%m-%d").date()
+    entry.day_of_week = date_obj.weekday()  # Auto-populate the day_of_week field
+
     existing_entry = session.exec(
         select(HealthEntry).where(HealthEntry.date == target_date)  # ← Changed from today to target_date
     ).first()

@@ -1,5 +1,4 @@
-# backend/src/personal_analytics/database.py
-# backend/src/personal_analytics/database.py
+
 from sqlmodel import SQLModel, create_engine, Session
 import os
 from dotenv import load_dotenv

@@ -148,17 +148,9 @@ const FORM_CONFIG = {
         label: 'Today\'s Activities & Factors',
         categories: {
             'general': {
-                'positive_events': {
-                    short: 'Positive Events',
-                    long: 'Exceptional Positive Events'
-                },
-                'negative_events': {
-                    short: 'Negative Events',
-                    long: 'Exceptional Negative Events'
-                },
-                'work': {
-                    short: 'Work Day',
-                    long: 'Did work today (as opposed to day off or weekend)'
+                'vacation': {
+                    short: 'Vacation',
+                    long: 'Vacation or day off. Do not to set this for weekends/public holidays.'
                 },
                 'chores': {
                     short: 'Many Chores',
@@ -171,7 +163,15 @@ const FORM_CONFIG = {
                 'other_medication': {
                     short: 'Other Medication',
                     long: 'Took other medication (not allergy, e.g., painkillers, antibiotics)'
-                }
+                },
+                'positive_events': {
+                    short: 'Other Positive Events',
+                    long: 'Exceptional Positive Events'
+                },
+                'negative_events': {
+                    short: 'Other Negative Events',
+                    long: 'Exceptional Negative Events'
+                },
             },
             'activities': {
                 'gaming': {
@@ -266,7 +266,6 @@ const FORM_CONFIG = {
                     short: 'Other Drugs',
                     long: 'Consumed Other Drugs'
                 }
-
             }
         },
         required: false,
@@ -283,7 +282,7 @@ const FORM_CONFIG = {
     daily_comments: {
         type: 'textarea',
         label: 'Additional notes or comments (optional)',
-        placeholder: 'Anything unusual today? Specific pain locations? Mood triggers? Things that helped?',
+        placeholder: 'Anything unusual today? Specific pain locations? Mood triggers? Child sick? Things that helped?',
         required: false,
         default: '',
         parse: (value) => value.trim() || null
