@@ -115,7 +115,7 @@ const FORM_CONFIG = {
     },
     social_support: {
         type: 'slider',
-        label: 'Quality of social interactions?',
+        label: 'Quality of social interactions and support?',
         min: 0,
         max: 10,
         scaleLabels: ['0 - Very poor', '10 - Excellent'],
