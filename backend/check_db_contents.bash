@@ -9,6 +9,7 @@ echo ""
 DB_NAME="personal_analytics"
 DB_USER="analytics_user"
 DB_HOST="localhost"
+# The password will be prompted for at runtime by the psql command
 
 echo "Connecting to database: $DB_NAME"
 echo "------------------------------------------"

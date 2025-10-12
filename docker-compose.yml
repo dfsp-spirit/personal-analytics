@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_DB: personal_analytics
       POSTGRES_USER: analytics_user
-      POSTGRES_PASSWORD: your_secure_password_here
+      POSTGRES_PASSWORD: personal_analytics_password
     ports:
       - "5432:5432"
     volumes:
@@ -25,7 +25,7 @@ services:
       dockerfile: Dockerfile
     container_name: personal-analytics-api
     environment:
-      DATABASE_URL: postgresql://analytics_user:your_secure_password_here@postgres:5432/personal_analytics
+      DATABASE_URL: postgresql://analytics_user:personal_analytics_password@postgres:5432/personal_analytics
     ports:
       - "8000:8000"
     depends_on:
