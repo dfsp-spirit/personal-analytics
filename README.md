@@ -15,7 +15,7 @@ Very early alpha, definitely not ready for production.
 
 ## Frontend
 
-### Frontend Development setup
+### Frontend Development Setup (see below for Docker alternative)
 
 First clone the repo:
 
@@ -44,7 +44,7 @@ python -m http.server 3000
 
 Make sure you have `uv`.
 
-### Development setup
+### Backend Development Setup (see below for Docker alternative)
 
 First clone the repo, if you do not have it yet:
 
@@ -52,6 +52,16 @@ First clone the repo, if you do not have it yet:
 git clone https://github.com/dfsp-spirit/personal-analytics
 cd personal-analytics/
 ```
+
+Then setup the postgresql database:
+
+```sh
+sudo apt install postgresql
+cd backend/
+./setup_db.sh
+```
+
+
 
 Then install in dev mode:
 
@@ -75,7 +85,12 @@ uvicorn personal_analytics_backend.api:app --reload --host 0.0.0.0 --port 8000
 ```
 
 
-## Alternative: Docker for both Frontend and Backend in containers
+## Alternative: Use Docker to run both the Frontend and the Backend in containers
+
+Make sure you have `docker` and docker compose, and that you are allowed to use it. If you're not in the `docker` system group, you will have to use `sudo` to run docker.
+
+Note that [docker-compose.yml](./docker-compose.yml) maps the postgresql port of the container to the default postgresql port on your host system, so you can easily access the database. This will of course fail if that port is already in use, e.g. by a postgresql server running on your host system. In that case, either change the port mapping in the Docker compose file, or change the port of your local postgresql server.
+
 
 ```sh
 # Start everything
