@@ -1,10 +1,17 @@
 # personal-analytics
-Highly experimental personal analytics app to understand life patterns and mess with time-series analysis and AI-based predictions.
 
-Don't take it too seriously.
+A web-based, mobile-friendly, experimental personal analytics app to understand life patterns and mess with time-series analysis and AI-based predictions. The idea is that you quickly fill out the same few questions every day over longer periods of time.
+
+This is not intended for self optimization, it's more about understanding what influences your wellbeing, and how. But you can adapt the data you track to your needs, of course.
+
+Whatever you use it for, you can use this to understand trends over time, to look into correlations between the dimensions you track, or to see whether certain events can serve to predict others on consecutive days.
+
+In any case, be careful when drawing conclusions. Don't take it too seriously unless you have put a lot of thought into data quality, filtering outliers, identifying and tracking possible confounding variables, interpolating missing values, etc. Basically follow good study design and data science practices, which will require domain knowledge.
 
 
+## Development state
 
+Very early alpha, definitely not ready for production.
 
 ## Frontend
 
