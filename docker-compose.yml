@@ -1,12 +1,16 @@
 version: '3.8'
 
-# Note that env variables like DATABASE_USER used in this file are
-# automatically loaded by docker-compose from a .env file in the same directory (the repo root).
+# Note on .env file location:
 #
-# So if you are running the backend in docker-compose, you do not need a separate .env file in the backend/ directory,
-# and you will be using the settings in the root .env file.
+# If you are running the backend in docker-compose (with working dir repo root), you need to place the .env file in the repo root directory.
+# That is because env variables like DATABASE_USER used in the docker-compose.yml file as variables are automatically loaded by docker-compose
+# from a .env file in the same directory (the repo root). And the docker-compose.yml file exposes those env variables to the postgres and backend services
+# as environment variables.
 #
-# For bare metal, you will need to create a .env file in the backend/ directory (e.g., copy the root .env file) or set them manually.
+# For bare metal, you will need to place the .env file in the backend/ directory, as you will start uvicorn from the backend/ directory, and the backend
+# code loads the .env file from the current working directory.
+# For bare metal, you can also set the env variables in your shell environment instead of using a .env file, of course.
+#
 
 services:
   postgres:
