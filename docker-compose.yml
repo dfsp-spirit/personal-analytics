@@ -1,20 +1,27 @@
 version: '3.8'
 
+# Note that env variables like DATABASE_USER used in this file are
+# automatically loaded by docker-compose from a .env file in the same directory (the repo root).
+#
+# So if you are running the backend in docker-compose, you do not need a separate .env file in the backend/ directory,
+# and you will be using the settings in the root .env file.
+#
+# For bare metal, you will need to create a .env file in the backend/ directory (e.g., copy the root .env file) or set them manually.
+
 services:
   postgres:
     image: postgres:15
     container_name: personal-analytics-db
     environment:
-      POSTGRES_DB: personal_analytics
-      POSTGRES_USER: analytics_user
-      POSTGRES_PASSWORD: personal_analytics_password
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${DATABASE_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U analytics_user -d personal_analytics"]
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -25,7 +32,7 @@ services:
       dockerfile: Dockerfile
     container_name: personal-analytics-api
     environment:
-      DATABASE_URL: postgresql://analytics_user:personal_analytics_password@postgres:5432/personal_analytics
+      DATABASE_URL: postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@postgres:5432/${DATABASE_NAME}
     ports:
       - "8000:8000"
     depends_on:
@@ -46,6 +53,7 @@ services:
       - backend
     environment:
       - API_BASE_URL=http://localhost:8000
+    # No env_file needed for frontend
 
 volumes:
   postgres_data:
