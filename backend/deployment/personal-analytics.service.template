@@ -1,0 +1,31 @@
+[Unit]
+Description=Personal Analytics Backend API
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=exec
+User=personal-analytics
+Group=personal-analytics
+WorkingDirectory=/opt/personal-analytics/backend
+Environment=PATH=/opt/personal-analytics/venv/bin
+ExecStart=/opt/personal-analytics/venv/bin/uvicorn personal_analytics_backend.api:app --host 0.0.0.0 --port 8000
+Restart=always
+RestartSec=10
+TimeoutStopSec=30
+KillSignal=SIGINT
+
+# Security settings
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/opt/personal-analytics
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=personal-analytics
+
+[Install]
+WantedBy=multi-user.target
