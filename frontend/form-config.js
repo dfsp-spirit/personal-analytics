@@ -147,39 +147,31 @@ const FORM_CONFIG = {
         type: 'checkbox-group',
         label: 'Today\'s Activities & Factors',
         categories: {
-            'general': {
+            'work': {
                 'vacation': {
                     short: 'Vacation',
                     long: 'Vacation or day off. Do not to set this for weekends/public holidays.'
                 },
-                'chores': {
-                    short: 'Many Chores',
-                    long: 'Exceptional or many Chores/Errands'
+                'travel_work': {
+                    short: 'Work Travel',
+                    long: 'Travel for Work'
                 },
-                'sick': {
-                    short: 'Sick',
-                    long: 'Was sick (cold, flu, etc.)'
+                'work_from_home': {
+                    short: 'Work from Home',
+                    long: 'Worked from Home'
                 },
-                'other_medication': {
-                    short: 'Other Medication',
-                    long: 'Took other medication (not allergy, e.g., painkillers, antibiotics)'
-                },
-                'positive_events': {
-                    short: 'Other Positive Events',
-                    long: 'Exceptional Positive Events'
-                },
-                'negative_events': {
-                    short: 'Other Negative Events',
-                    long: 'Exceptional Negative Events'
-                },
+                'called_in_sick': {
+                    short: 'Called in Sick',
+                    long: 'Called in Sick to Work'
+                }
             },
-            'activities': {
+            'leisure activities': {
                 'gaming': {
                     short: 'Gaming',
-                    long: 'Gaming on Computer/Console/Phone'
+                    long: 'Gaming on Computer/Console'
                 },
                 'computer_creative_work': {
-                    short: 'Creative PC Work',
+                    short: 'Creative Work at PC',
                     long: 'Computer Creative Work'
                 },
                 'creative': {
@@ -204,11 +196,7 @@ const FORM_CONFIG = {
                 },
                 'smartphone': {
                     short: 'Smartphone',
-                    long: 'Longer Smartphone Use (e.g., Browsing, Apps)'
-                },
-                'social_media': {
-                    short: 'Social Media',
-                    long: 'Social Media'
+                    long: 'Longer Smartphone Use (e.g., Browsing, Apps, Games)'
                 },
                 'learning': {
                     short: 'Learning',
@@ -217,8 +205,8 @@ const FORM_CONFIG = {
             },
             'social': {
                 'family_time': {
-                    short: 'Family Time',
-                    long: 'Quality Family Time'
+                    short: 'Quality Family Time',
+                    long: 'Quality Family Time you enjoyed (not just being at home)'
                 },
                 'relationship_time': {
                     short: 'Partner Time',
@@ -234,7 +222,7 @@ const FORM_CONFIG = {
                 },
                 'friends': {
                     short: 'Friends',
-                    long: 'Met Friend in Person, active visiting or inviting'
+                    long: 'Met Friend in Person. Planned, active visiting or inviting'
                 },
                 'social_outing': {
                     short: 'Social Outing',
@@ -246,27 +234,45 @@ const FORM_CONFIG = {
                     short: 'Ate Too Much',
                     long: 'Ate Too Much'
                 },
-                'ate_too_little': {
-                    short: 'Ate Too Little',
-                    long: 'Ate Too Little or Skipped Meal'
+                'alcohol_drugs': {
+                    short: 'Alcohol/Drugs',
+                    long: 'Consumed Alcohol or Recreational Drugs'
                 },
-                'eating_out': {
-                    short: 'Ate Out',
-                    long: 'Ate Out (Restaurant, Party)'
+            },
+            'health': {
+                'sick': {
+                    short: 'Sick',
+                    long: 'Was sick (cold, flu, etc.)'
                 },
-                'great_food': {
-                    short: 'Great Food',
-                    long: 'Ate Food I Liked a Lot'
+                'other_medication': {
+                    short: 'Other Medication',
+                    long: 'Took other medication (not allergy, e.g., painkillers, antibiotics)'
                 },
-                'alcohol': {
-                    short: 'Alcohol',
-                    long: 'Consumed Alcoholic Beverages'
+            },
+            'home': {
+                'day_at_home': {
+                    short: 'Day at Home with Family',
+                    long: 'Spent the day at home with family, e.g., weekend, public holiday.'
                 },
-                'other_drugs': {
-                    short: 'Other Drugs',
-                    long: 'Consumed Other Drugs'
-                }
-            }
+                'travel_holidays': {
+                    short: 'Travel/Holidays',
+                    long: 'Travel for Leisure. Not work-related travel. Not a regular vacation day at home.'
+                },
+                'chores': {
+                    short: 'Many Chores',
+                    long: 'Exceptional or many Chores/Errands, child sick, etc.'
+                },
+            },
+            'general': {
+                'positive_events': {
+                    short: 'Other Positive Events',
+                    long: 'Exceptional Positive Events: good news, fun event, etc.'
+                },
+                'negative_events': {
+                    short: 'Other Negative Events',
+                    long: 'Exceptional Negative Events: bad news, arguments, etc.'
+                },
+            },
         },
         required: false,
         default: {},
@@ -282,7 +288,7 @@ const FORM_CONFIG = {
     daily_comments: {
         type: 'textarea',
         label: 'Additional notes or comments (optional)',
-        placeholder: 'Anything unusual today? Specific pain locations? Mood triggers? Child sick? Things that helped?',
+        placeholder: 'Anything unusual today? Specific pain locations? Mood triggers? Things that helped?',
         required: false,
         default: '',
         parse: (value) => value.trim() || null
