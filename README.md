@@ -53,12 +53,20 @@ git clone https://github.com/dfsp-spirit/personal-analytics
 cd personal-analytics/
 ```
 
+Create the file `backend/.env` with database credentials. You can copy the template file and edit it:
+
+```sh
+cp backend/.env.example backend/.env
+vim backend/.env # Adapt it!
+```
+
+
 Then setup the postgresql database:
 
 ```sh
 sudo apt install postgresql
 cd backend/
-./setup_db.sh
+./setup_db.sh   # will use settings from <repo_root>/backend/.env
 ```
 
 
@@ -90,6 +98,13 @@ uvicorn personal_analytics_backend.api:app --reload --host 0.0.0.0 --port 8000
 Make sure you have `docker` and docker compose, and that you are allowed to use it. If you're not in the `docker` system group, you will have to use `sudo` to run docker.
 
 Note that [docker-compose.yml](./docker-compose.yml) maps the postgresql port of the container to the default postgresql port on your host system, so you can easily access the database. This will of course fail if that port is already in use, e.g. by a postgresql server running on your host system. In that case, either change the port mapping in the Docker compose file, or change the port of your local postgresql server.
+
+First create the file `<repo_root>/.env` with database credentials. You can copy the template file and edit it:
+
+```sh
+cp backend/.env.example .env
+vim .env # Adapt it!
+```
 
 
 ```sh
