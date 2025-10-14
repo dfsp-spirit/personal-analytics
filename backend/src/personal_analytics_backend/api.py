@@ -1,7 +1,14 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Request, status, Response, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List, Optional
+from fastapi.responses import JSONResponse
+from pydantic import ValidationError
+from fastapi.exceptions import RequestValidationError
+import logging
+import uuid
+from typing import Dict, Any, List, Optional
+import calendar
 from datetime import datetime
+
 
 from sqlmodel import Session, select
 
@@ -24,8 +31,72 @@ def on_startup():
     create_db_and_tables()
 
 
-from fastapi import Response
-from typing import Dict, Any
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+# Add this exception handler for request validation errors
+@app.exception_handler(RequestValidationError)
+async def request_validation_exception_handler(request: Request, exc: RequestValidationError):
+    error_id = str(uuid.uuid4())
+
+    # Log detailed error information server-side
+    error_details = []
+    for error in exc.errors():
+        error_details.append({
+            "field": " -> ".join(str(loc) for loc in error["loc"]),
+            "message": error["msg"],
+            "type": error["type"]
+        })
+
+    logger.error(
+        f"Request Validation error ID {error_id}: "
+        f"Path: {request.url.path}, "
+        f"Errors: {error_details}, "
+        f"Client: {request.client.host if request.client else 'unknown'}"
+    )
+
+    # Send generic error to client
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "detail": "Invalid request data",
+            "error_id": error_id,
+            "message": "Please check your request data format and values"
+        }
+    )
+
+@app.exception_handler(ValidationError)
+async def validation_exception_handler(request: Request, exc: ValidationError):
+    # Generate a unique error ID for tracking
+    error_id = str(uuid.uuid4())
+
+    # Log detailed error information server-side
+    error_details = []
+    for error in exc.errors():
+        error_details.append({
+            "field": " -> ".join(str(loc) for loc in error["loc"]),
+            "message": error["msg"],
+            "type": error["type"]
+        })
+
+    logger.error(
+        f"Validation error ID {error_id}: "
+        f"Path: {request.url.path}, "
+        f"Errors: {error_details}, "
+        f"Client: {request.client.host if request.client else 'unknown'}"
+    )
+
+    # Send generic error to client
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "detail": "Invalid request data",
+            "error_id": error_id,  # Client can reference this if needed
+            "message": "Please check your request data format and values"
+        }
+    )
+
 
 @app.post("/entries/", response_model=HealthEntryRead)
 def submit_entry(entry: HealthEntryCreate, session: Session = Depends(get_session)):

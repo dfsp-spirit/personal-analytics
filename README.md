@@ -89,7 +89,7 @@ To run it once its installed:
 
 ```sh
 # still in <repo>/backend/
-uvicorn personal_analytics_backend.api:app --reload --host 0.0.0.0 --port 8000
+uv run uvicorn personal_analytics_backend.api:app --reload --host 0.0.0.0 --port 8000
 ```
 
 

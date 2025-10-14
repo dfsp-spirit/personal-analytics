@@ -9,11 +9,12 @@ import uuid
 class HealthEntryBase(SQLModel):
     date: str = Field(index=True, unique=True)
     timestamp: datetime = Field(default_factory=datetime.now)
-    day_of_week: int = Field(  # Store in DB for querying
+    day_of_week: Optional[int] = Field(  # Store in DB for querying
         sa_column=Column(Integer),
         ge=0, le=6,  # 0=Monday, 6=Sunday
         description="0=Monday, 1=Tuesday, ..., 6=Sunday"
     )
+    day_of_week: Optional[int] = None
 
     # Core metrics
     mood: int = Field(ge=0, le=10)

@@ -149,7 +149,7 @@ form.addEventListener('submit', async function(e) {
         const operation = response.headers.get('X-Operation');
         console.log('X-Operation from header:', operation);
         const message = operation === 'created' ?
-            '🎉 New entry created!' : '✏️ Entry updated!';
+            'New entry created!' : 'Entry updated!';
 
         console.log(message, result);
         alert(message);
@@ -159,7 +159,7 @@ form.addEventListener('submit', async function(e) {
         console.error('Error saving data:', error);
         console.log('Falling back to localStorage...');
         saveToStorage(formData);
-        alert('Saved to local storage (API unavailable)');
+        alert('Saved to local storage (backend API error: ' + error.message + ')');
 
     } finally {
         submitBtn.textContent = originalText;
