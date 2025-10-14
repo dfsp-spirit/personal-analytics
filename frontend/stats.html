@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ts // Personal Analytics - Statistics</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="data:,">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .stats-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .controls {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+        .chart-container {
+            margin: 30px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .metric-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .metric-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="stats-container">
+        <header>
+            <h1>Personal Analytics - Statistics</h1>
+            <div class="nav-links">
+                <a href="index.html">← Back to Daily Entry</a>
+            </div>
+        </header>
+
+        <div class="controls">
+            <label for="days-range">Time Range:</label>
+            <select id="days-range">
+                <option value="7">Last 7 days</option>
+                <option value="30" selected>Last 30 days</option>
+                <option value="90">Last 3 months</option>
+                <option value="365">Last year</option>
+            </select>
+
+            <div class="metric-selector">
+                <div class="metric-checkbox">
+                    <input type="checkbox" id="mood-check" checked>
+                    <label for="mood-check">Mood</label>
+                </div>
+                <div class="metric-checkbox">
+                    <input type="checkbox" id="pain-check" checked>
+                    <label for="pain-check">Pain</label>
+                </div>
+                <div class="metric-checkbox">
+                    <input type="checkbox" id="anxiety-check" checked>
+                    <label for="anxiety-check">Anxiety</label>
+                </div>
+                <div class="metric-checkbox">
+                    <input type="checkbox" id="energy-check">
+                    <label for="energy-check">Energy</label>
+                </div>
+                <div class="metric-checkbox">
+                    <input type="checkbox" id="sleep-check">
+                    <label for="sleep-check">Sleep Quality</label>
+                </div>
+            </div>
+
+            <button id="update-chart">Update Chart</button>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="metricsChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000';
+        let chart = null;
+
+        // Available metrics with colors
+        const metricConfig = {
+            mood: { label: 'Mood', color: 'rgb(75, 192, 192)', borderDash: [] },
+            pain: { label: 'Pain', color: 'rgb(255, 99, 132)', borderDash: [] },
+            anxiety: { label: 'Anxiety', color: 'rgb(255, 159, 64)', borderDash: [] },
+            energy: { label: 'Energy', color: 'rgb(54, 162, 235)', borderDash: [5, 5] },
+            sleep_quality: { label: 'Sleep Quality', color: 'rgb(153, 102, 255)', borderDash: [10, 5] }
+        };
+
+        async function loadChartData(days = 30) {
+            try {
+                // Get selected metrics
+                const selectedMetrics = Object.keys(metricConfig).filter(metric => {
+                    return document.getElementById(`${metric}-check`)?.checked;
+                });
+
+                const response = await fetch(
+                    `${API_BASE_URL}/stats/metrics-over-time?days=${days}&metrics=${selectedMetrics.join(',')}`
+                );
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch stats data');
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error('Error loading chart data:', error);
+                // Fallback to localStorage if needed
+                return loadFromLocalStorage(days, selectedMetrics);
+            }
+        }
+
+        function createChart(data) {
+            const ctx = document.getElementById('metricsChart').getContext('2d');
+
+            // Destroy existing chart if it exists
+            if (chart) {
+                chart.destroy();
+            }
+
+            const datasets = [];
+
+            // Create dataset for each selected metric
+            Object.keys(data.metrics).forEach(metric => {
+                if (data.metrics[metric].some(val => val !== null)) { // Only add if there's data
+                    const config = metricConfig[metric];
+                    datasets.push({
+                        label: config.label,
+                        data: data.metrics[metric],
+                        borderColor: config.color,
+                        backgroundColor: config.color + '20',
+                        borderWidth: 2,
+                        borderDash: config.borderDash,
+                        tension: 0.4, // Smooth lines
+                        spanGaps: true, // Connect across missing data
+                        pointBackgroundColor: config.color,
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    });
+                }
+            });
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.dates.map(date => {
+                        const d = new Date(date);
+                        return d.toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric'
+                        });
+                    }),
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    height: 400,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10,
+                            title: {
+                                display: true,
+                                text: 'Score (0-10)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+        }
+
+        async function updateChart() {
+            const days = parseInt(document.getElementById('days-range').value);
+            const data = await loadChartData(days);
+            createChart(data);
+        }
+
+        // Fallback to localStorage data
+        function loadFromLocalStorage(days, metrics) {
+            const existingData = JSON.parse(localStorage.getItem('healthData') || '[]');
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - days);
+
+            const filteredData = existingData.filter(entry => {
+                const entryDate = new Date(entry.date);
+                return entryDate >= startDate && entryDate <= endDate;
+            }).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            const result = {
+                dates: filteredData.map(entry => entry.date),
+                metrics: {}
+            };
+
+            metrics.forEach(metric => {
+                result.metrics[metric] = filteredData.map(entry => entry[metric] || null);
+            });
+
+            return result;
+        }
+
+        // Event listeners
+        document.getElementById('update-chart').addEventListener('click', updateChart);
+        document.getElementById('days-range').addEventListener('change', updateChart);
+
+        // Initialize chart on page load
+        window.addEventListener('load', updateChart);
+    </script>
+</body>
+</html>

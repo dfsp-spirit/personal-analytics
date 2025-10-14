@@ -5,9 +5,8 @@ from pydantic import ValidationError
 from fastapi.exceptions import RequestValidationError
 import logging
 import uuid
-from typing import Dict, Any, List, Optional
-import calendar
-from datetime import datetime
+from typing import List, Optional
+from datetime import datetime, timedelta
 
 
 from sqlmodel import Session, select
@@ -199,3 +198,42 @@ def root():
 def health_check(session: Session = Depends(get_session)):
     count = session.exec(select(HealthEntry)).all()
     return {"status": "healthy", "entries_count": len(count)}
+
+
+@app.get("/stats/metrics-over-time")
+def get_metrics_over_time(
+    days: int = 30,  # Default to last 30 days
+    metrics: List[str] = None,  # Optional: specific metrics to return
+    session: Session = Depends(get_session)
+):
+    """Get metrics data for visualization over time"""
+
+    # Calculate date range
+    end_date = datetime.now().date()
+    start_date = end_date - timedelta(days=days)
+
+    # Query entries in date range
+    query = select(HealthEntry).where(
+        HealthEntry.date >= start_date.isoformat(),
+        HealthEntry.date <= end_date.isoformat()
+    ).order_by(HealthEntry.date)
+
+    entries = session.exec(query).all()
+
+    # Default metrics if none specified
+    if metrics is None:
+        metrics = ["mood", "pain", "anxiety", "energy", "sleep_quality"]
+
+    # Structure data for frontend
+    result = {
+        "dates": [],
+        "metrics": {metric: [] for metric in metrics}
+    }
+
+    for entry in entries:
+        result["dates"].append(entry.date)
+        for metric in metrics:
+            value = getattr(entry, metric, None)
+            result["metrics"][metric].append(value)
+
+    return result
