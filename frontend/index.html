@@ -79,6 +79,18 @@
 
             // Update form title
             const dateDisplay = document.querySelector('h2.date-display');
+
+            // Calculate days ago
+            const todayMidnight = new Date();
+            todayMidnight.setHours(0, 0, 0, 0);
+
+            const currentDateMidnight = new Date(currentDate);
+            currentDateMidnight.setHours(0, 0, 0, 0);
+
+            const timeDiff = todayMidnight.getTime() - currentDateMidnight.getTime();
+            const daysAgo = Math.floor(timeDiff / (1000 * 3600 * 24));
+
+
             if (isToday(currentDate)) {
                 dateDisplay.textContent = 'Data for: Today';
             } else {
@@ -88,11 +100,28 @@
                     month: 'long',
                     day: 'numeric'
                 });
-                dateDisplay.textContent = `Data for: ${formattedDate}`;
-            }
 
+                // Handle "days ago" text
+                let daysAgoText = '';
+                if (daysAgo === 1) {
+                    daysAgoText = '-- 1 day ago';
+                } else if (daysAgo > 1) {
+                    daysAgoText = `-- ${daysAgo} days ago`;
+                } else if (daysAgo < 0) {
+                    // Future date
+                    const futureDays = Math.abs(daysAgo);
+                    if (futureDays === 1) {
+                        daysAgoText = '-- 1 day from now';
+                    } else {
+                        daysAgoText = `-- ${futureDays} days from now`;
+                    }
+                }
+
+                    dateDisplay.textContent = `Data for: ${formattedDate} ${daysAgoText}`;
+         }
             // Load existing data for selected date
             loadEntryForDate(currentDate.toISOString().split('T')[0]);
+
         }
 
 function changeDate(days) {
