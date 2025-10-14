@@ -72,10 +72,8 @@ echo "NOTICE: The host and port settings above do NOT come from the .env file, b
 
 ## End of env file handling
 
-echo "Setting up PostgreSQL database '${DATABASE_NAME}' and user '${DATABASE_USER}'..."
-echo "Connecting to database server at ${DATABASE_HOST}:${DATABASE_PORT} as user 'postgres' (requires sudo access)..."
-
-sudo -u postgres psql -h ${DATABASE_HOST} -p ${DATABASE_PORT} << EOF
+# Define SQL commands once
+SQL_COMMANDS=$(cat << SQL_EOF
 CREATE DATABASE ${DATABASE_NAME};
 CREATE USER ${DATABASE_USER} WITH PASSWORD '${DATABASE_PASSWORD}';
 GRANT ALL PRIVILEGES ON DATABASE ${DATABASE_NAME} TO ${DATABASE_USER};
@@ -85,5 +83,32 @@ GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO ${DATABASE_USER};
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO ${DATABASE_USER};
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO ${DATABASE_USER};
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO ${DATABASE_USER};
+SQL_EOF
+)
+
+echo "Setting up PostgreSQL database '${DATABASE_NAME}' and user '${DATABASE_USER}'..."
+
+# Determine authentication method based on host
+if [ "$DATABASE_HOST" = "localhost" ] || [ "$DATABASE_HOST" = "127.0.0.1" ] || [ -z "$DATABASE_HOST" ]; then
+    echo "Connecting to local database server as user 'postgres' (using sudo/peer authentication)..."
+
+    # For local connections, use sudo without host specification for peer authentication
+    sudo -u postgres psql -p ${DATABASE_PORT} << EOF
+$SQL_COMMANDS
 EOF
+else
+    echo "Connecting to remote database server at ${DATABASE_HOST}:${DATABASE_PORT} as user 'postgres'..."
+    echo "WARNING: For remote connections, you need to handle authentication."
+    echo "Options:"
+    echo "  1. Set PGPASSWORD environment variable before running this script, or"
+    echo "  2. Use .pgpass file in your home directory, or"
+    echo "  3. You will be prompted for the postgres user password (the database superuser password)"
+    echo ""
+
+    # For remote connections, use the host specification
+    psql -h ${DATABASE_HOST} -p ${DATABASE_PORT} -U postgres -W << EOF
+$SQL_COMMANDS
+EOF
+fi
+
 echo "Database setup complete. Check for errors above."
