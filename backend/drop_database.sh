@@ -2,45 +2,46 @@
 #
 # Drop (delete) the PostgreSQL database used by the personal-analytics web app.
 #
-# This script works for both bare metal and Docker deployments, as long as the .env file is correctly configured.
+# This is a development setup script and is not intended for production use. It assumes that:
+#  1) you are developing on your local machine, and not using Docker
+#  2) you have sudo access to the postgres user
+#  3) the database server is running on the same machine
+#  4) peer authentication is enabled in postgres for local connections
+#
+# If you have a the database server running on a different machine (including a docker container with port mapping to localhost), you will
+# need to adapt the 'psql' command to connect to the remote server, host, port, and authentication method. Peer authentication will not work in that case.
+# In that case, the .env file in this directory may not be the correct one to use. Use the env file that is used by the backend application. For docker,
+# that is the .env file in the parent directory (the root of the project/repo).
+#
+# Usage: ./drop_database.sh
 
 echo "=== Drop database of the personal-analytics web app, deleting all analytics data ==="
+echo "NOTE: This script is for development use only. It is not intended for production use."
 
-## Env file handling
-if [ $# -eq 0 ]; then
-    echo "ERROR: Please specify the .env file to use"
-    echo ""
-    echo "Usage: $0 <path-to-env-file>"
-    echo ""
-    echo "Examples:"
-    echo "  $0 .env                    # Bare metal (in <repo_root>/backend/.env)"
-    echo "  $0 ../.env                 # Docker (in <repo_root>/.env), if you run the script from <repo_root>/backend"
-    echo "  $0 /path/to/custom.env     # Custom location. Useful if you have multiple setups, e.g., testing vs production."
-    echo ""
-    echo "For Docker deployments, use the same .env file as docker-compose.yml, i.e., in repo root."
-    echo "    * docker-compose.yml will pick it up from there (same directory) automatically, and is configured to pass relevant env vars in it on to the containers (as env vars)."
-    echo "    * The backend running in the container will pick up the env vars and use them to connect to the database. It will ignore any .env file in its working directory, as env vars take precedence over the '.env' file."
-    echo "For bare metal, use backend/.env"
-    echo "    * The backend will read the env file in its working directory and use it to connect to the database."
-    echo "    * Note that if you have set environment variables in your shell when you start the backend, they will override the .env file."
+
+if [ ! -f ".env" ]; then
+    echo "ERROR: .env file not found. You need to create it first from the '.env.example' template file."
     exit 1
 fi
 
-ENV_FILE="$1"
+source ".env"   # Loads environment variables DATABASE_NAME, DATABASE_USER, DATABASE_PASSWORD
 
-if [ ! -f "$ENV_FILE" ]; then
-    echo "ERROR: .env file not found: '$ENV_FILE'. Please provide a valid path."
+# After sourcing the .env file, validate required variables
+if [ -z "$DATABASE_NAME" ] || [ -z "$DATABASE_USER" ] || [ -z "$DATABASE_PASSWORD" ]; then
+    echo "ERROR: Missing required database configuration in '.env' file."
+    echo "Please ensure DATABASE_NAME, DATABASE_USER, and DATABASE_PASSWORD are set."
     exit 1
 fi
 
-echo "Using environment from: '$ENV_FILE'"
-source "$ENV_FILE"   # Loads environment variables DATABASE_NAME, DATABASE_USER, DATABASE_PASSWORD
+echo "Loaded env vars from '.env' file:"
+echo " DATABASE_NAME='$DATABASE_NAME'"
+echo " DATABASE_USER='$DATABASE_USER'"
+echo " DATABASE_PASSWORD='(hidden)'"
 ## End of env file handling
 
 echo "Dropping database..."
 
-
-echo "WARNING: This will permanently delete the postgresql database '$DATABASE_NAME' and all its data!"
+echo "WARNING: This will permanently delete the postgresql database '$DATABASE_NAME' on localhost and all its data!"
 read -p "Are you sure you want to continue? (y/N): " confirm
 
 if [[ $confirm != [yY] && $confirm != [yY][eE][sS] ]]; then

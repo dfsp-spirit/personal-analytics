@@ -1,18 +1,41 @@
 #!/bin/bash
+#
+# Script to check and display contents of the PostgreSQL database used by the personal-analytics web app.
+# This is a development script and is not intended for production use.
+# It only reads data and does not modify anything, so it does not require sudo access.
+# It uses the DATABASE_URL from the .env file to connect to the database.
 
-echo "=========================================="
-echo " Personal Analytics - Database Contents"
-echo "=========================================="
-echo ""
+echo "=== Personal Analytics - Check Database Contents ==="
+echo "NOTE: This script is for development use only. It is not intended for production use."
+echo "NOTE: You will need to start the backend at least once, so that the relations (tables) are created."
 
-source .env   # Load DB credentials from .env
+if [ ! -f ".env" ]; then
+    echo "ERROR: .env file not found. You need to create it first from the '.env.example' template file."
+    exit 1
+fi
+
+source ".env"   # Loads environment variables DATABASE_NAME, DATABASE_USER, DATABASE_PASSWORD
+
+# After sourcing the .env file, validate required variables
+if [ -z "$DATABASE_NAME" ] || [ -z "$DATABASE_USER" ] || [ -z "$DATABASE_PASSWORD" ] || [ -z "$DATABASE_URL" ]; then
+    echo "ERROR: Missing required database configuration in '.env' file."
+    echo "Please ensure DATABASE_NAME, DATABASE_USER, DATABASE_PASSWORD, and DATABASE_URL are set."
+    exit 1
+fi
+
+echo "Loaded env vars from '.env' file:"
+echo " DATABASE_NAME='$DATABASE_NAME'"
+echo " DATABASE_USER='$DATABASE_USER'"
+echo " DATABASE_PASSWORD='(hidden)'"
+echo " DATABASE_URL='(hidden)'"
+## End of env file handling
 
 # Set database connection
 
-echo "Connecting to database: $DATABASE_NAME"
+echo "Connecting to database: $DATABASE_NAME via DATABASE_URL..."
 echo "------------------------------------------"
 
-#psql -h $DB_HOST -U $DB_USER -d $DB_NAME -W << EOF
+
 psql $DATABASE_URL << EOF
 
 \\echo ''

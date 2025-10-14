@@ -2,8 +2,10 @@
 #
 # Script to set up PostgreSQL database and user based on .env file.
 #
-# This script will create the database, but the postgresql server must be
+# This script will create the database and database user, but the postgresql server must be
 # running and accessible.
+# Note that it does NOT create any tables or relations in the database. The backend application
+# will create the required tables automatically when it is started for the first time.
 #
 # This is a development setup script and is not intended for production use. It assumes that:
 #  1) you are developing on your local machine, and not using Docker
@@ -20,6 +22,7 @@
 # Usage: ./setup_db.sh
 
 echo "=== Database setup for personal-analytics ==="
+echo "NOTE: This script is for development use only. It is not intended for production use."
 
 
 if [ ! -f ".env" ]; then
