@@ -1,7 +1,7 @@
 // form-config.js
 // Configuration object for dynamic form generation
 
-const API_BASE_URL = 'http://localhost:8000';
+
 
 const FORM_CONFIG = {
     mood: {

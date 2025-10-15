@@ -36,8 +36,12 @@ To run it:
 
 ```sh
 # we are still in <repo>/frontend/
-python -m http.server 3000
+python -m http.server 3000  # serve frontend on http://localhost:3000
 ```
+
+The only configuration you may want to do is to adapt the backend API url. It can be found in [frontend/settings.js](./frontend/settings.js), find the line `const API_BASE_URL = 'http://localhost:8000'`; The default value should work for local development and points to the default value used in the backend.
+
+Note that in docker, the backend does not run on `localhost`, but on `backend`. Therefore, the Dockerfile copies `frontend/settings.docker.js` over `frontend/settings.js`.
 
 
 ## Backend
