@@ -503,3 +503,70 @@ textarea::placeholder {
         .nav-links a:hover {
             text-decoration: underline;
         }
+
+
+        .stats-section {
+    margin: 40px 0;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.stat-card {
+    text-align: center;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.stat-card h3 {
+    margin: 0;
+    font-size: 2em;
+    color: #007bff;
+}
+
+.stat-card p {
+    margin: 5px 0 0 0;
+    color: #666;
+}
+
+.correlation-grid {
+    display: grid;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.correlation-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.metric-pair {
+    font-weight: bold;
+}
+
+.correlation-value.positive {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.correlation-value.negative {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.analysis-results {
+    line-height: 1.6;
+}
