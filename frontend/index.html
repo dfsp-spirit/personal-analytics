@@ -16,6 +16,7 @@
                 <a href="stats.html">To Statistics page</a>
             </div>
             <h2 class="date-display"></h2>
+            <div id="entry-status" class="entry-status"></div>
         </header>
 
         <div class="date-selector">
@@ -65,6 +66,24 @@
         // Date management
         let currentDate = new Date();
         let hasUnsavedChanges = false;
+        let currentEntryExists = false; // Track if entry exists in DB for current date
+
+        // Add this function to update the status display
+        function updateEntryStatus(exists) {
+            currentEntryExists = exists;
+            const statusElement = document.getElementById('entry-status');
+            const submitBtn = document.querySelector('button[type="submit"]');
+
+            if (exists) {
+                statusElement.innerHTML = '<span class="status-badge status-exists">✓ Entry exists</span>';
+                submitBtn.textContent = 'Update Entry';
+                submitBtn.className = 'btn-update';
+            } else {
+                statusElement.innerHTML = '<span class="status-badge status-new">+ New entry</span>';
+                submitBtn.textContent = 'Save Entry';
+                submitBtn.className = 'btn-save';
+            }
+        }
 
         function updateDateDisplay() {
             const dateInput = document.getElementById('entry-date');
@@ -150,7 +169,21 @@ function isToday(date) {
     return date.toDateString() === today.toDateString();
 }
 
-// Update form submission to use selected date
+
+
+
+// Event listeners for date navigation
+document.getElementById('prev-day').addEventListener('click', () => changeDate(-1));
+document.getElementById('next-day').addEventListener('click', () => changeDate(1));
+document.getElementById('today-btn').addEventListener('click', setToToday);
+
+// Date input change
+document.getElementById('entry-date').addEventListener('change', function() {
+    currentDate = new Date(this.value);
+    updateDateDisplay();
+});
+
+// Update the form submission to reset status after successful save
 form.addEventListener('submit', async function(e) {
     e.preventDefault();
 
@@ -187,19 +220,24 @@ form.addEventListener('submit', async function(e) {
         alert(message);
         hasUnsavedChanges = false;
 
+        // Update status after successful save
+        updateEntryStatus(true); // Now an entry exists for this date
+
     } catch (error) {
         console.error('Error saving data:', error);
         console.log('Falling back to localStorage...');
         saveToStorage(formData);
         alert('Saved to local storage (backend API error: ' + error.message + ')');
+        // Update status for localStorage too
+        updateEntryStatus(true);
 
     } finally {
-        submitBtn.textContent = originalText;
+        submitBtn.textContent = currentEntryExists ? 'Update Entry' : 'Save Entry';
         submitBtn.disabled = false;
     }
 });
 
-// Update loadEntryForDate function
+// Update the loadEntryForDate function to set the status
 async function loadEntryForDate(date) {
     try {
         const response = await fetch(`${API_BASE_URL}/entries/?start_date=${date}&end_date=${date}`);
@@ -210,11 +248,13 @@ async function loadEntryForDate(date) {
                 // Auto-load the existing entry
                 FormUtils.loadDataIntoForm(entries[0]);
                 updateSliderDisplays();
+                updateEntryStatus(true); // Entry exists
                 console.log(`Loaded existing entry for ${date}`);
             } else {
                 // Clear form if no entry exists
                 FormUtils.setFormDefaults();
                 updateSliderDisplays();
+                updateEntryStatus(false); // No entry exists
                 console.log(`No existing entry found for ${date}. Presenting empty form.`);
             }
         }
@@ -227,23 +267,14 @@ async function loadEntryForDate(date) {
         if (existingEntry) {
             FormUtils.loadDataIntoForm(existingEntry);
             updateSliderDisplays();
+            updateEntryStatus(true);
         } else {
             FormUtils.setFormDefaults();
             updateSliderDisplays();
+            updateEntryStatus(false);
         }
     }
 }
-
-// Event listeners for date navigation
-document.getElementById('prev-day').addEventListener('click', () => changeDate(-1));
-document.getElementById('next-day').addEventListener('click', () => changeDate(1));
-document.getElementById('today-btn').addEventListener('click', setToToday);
-
-// Date input change
-document.getElementById('entry-date').addEventListener('change', function() {
-    currentDate = new Date(this.value);
-    updateDateDisplay();
-});
 
 
 
