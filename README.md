@@ -41,7 +41,9 @@ python -m http.server 3000  # serve frontend on http://localhost:3000
 
 The only configuration you may want to do is to adapt the backend API url. It can be found in [frontend/settings.js](./frontend/settings.js), find the line `const API_BASE_URL = 'http://localhost:8000'`; The default value should work for local development and points to the default value used in the backend.
 
-Note that in docker, the backend does not run on `localhost`, but on `backend`. Therefore, the Dockerfile copies `frontend/settings.docker.js` over `frontend/settings.js`.
+Note that in our development Docker image, the backend does not run on `localhost`, but on `backend`. Therefore, the Dockerfile copies `frontend/settings.docker.js` over `frontend/settings.js`. In that file, the default is `const API_BASE_URL = 'http://backend:8000'`.
+
+Note that if you deploy to your production bare metal server or your own production Docker image, you will (hopefully) use HTTPS and an ngingx reverse proxy instead of exposing uvicorn directly to the internet. That means your API_BASE_URL would be something like `https://your-production-domain/path_to_backend`, i.e., it will use the standard HTTPS port (443). So you will have uvicorn running on 127.0.0.1:8000 (not 0.0.0.0:8000), and thus users can only access it via nginx, which runs HTTPS on 443.
 
 
 ## Backend
@@ -97,7 +99,9 @@ uv run uvicorn personal_analytics_backend.api:app --reload --host 0.0.0.0 --port
 ```
 
 
-## Alternative: Use Docker to run both the Frontend and the Backend in containers
+## Alternative: Use Docker to run both the Frontend and the Backend in containers (development mode)
+
+**IMPORTANT**: *The Docker setup provided in this repo is meant for development. Do not use it for production. It does many things that are not secure, e.g., no HTTPS, expose uvicorn directly, etc.*
 
 Make sure you have `docker` and docker compose, and that you are allowed to use it. If you're not in the `docker` system group, you will have to use `sudo` to run docker.
 
