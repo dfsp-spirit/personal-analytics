@@ -72,7 +72,7 @@ Then setup the postgresql database:
 ```sh
 sudo apt install postgresql
 cd backend/
-./setup_db.sh   # will use settings from <repo_root>/backend/.env
+./setup_db.sh   # will use settings from <repo_root>/backend/.env, requires sudo
 ```
 
 
@@ -98,6 +98,11 @@ To run it once its installed:
 uv run uvicorn personal_analytics_backend.api:app --reload --host 0.0.0.0 --port 8000
 ```
 
+You can now access your services:
+
+* Frontend: http://localhost:3000
+* Backend API: http://localhost:8000
+* PostgreSQL: postgresql://localhost:5432 or using peer authentication as system user `postgresql` (if allowed in your system's `pg_hba.conf`)
 
 ## Alternative: Use Docker to run both the Frontend and the Backend in containers (development mode)
 
@@ -129,64 +134,12 @@ docker-compose down
 docker-compose down -v
 ```
 
-Access your services:
+The ports get mapped in the [docker-compose.yml](./docker-compose.yml) file, so you can access all services directly from the host computer:
 
-* Frontend: http://localhost:3000
+* Frontend: http://localhost
 * Backend API: http://localhost:8000
-* API Docs: http://localhost:8000/docs
-* PostgreSQL: localhost:5432
+* PostgreSQL: postgresql://localhost:5432
 
 
 ## Deployment options
 
-### Bare metal
-
-If you want to deploy the backend under Linux bare metal, you should create a system service for it, along with a dedicated user.
-
-Create app dir, user, and install backend there:
-
-```sh
-# Create dedicated user
-sudo adduser --system --group --home /opt/personal-analytics personal-analytics
-
-# Create app directory
-sudo mkdir -p /opt/personal-analytics/backend
-sudo chown personal-analytics:personal-analytics /opt/personal-analytics
-
-# Switch to service user and install app in the service directory
-sudo su - personal-analytics
-cd /opt/personal-analytics
-
-# Now your part: install the app as described above, with production settings, proper passwords in .env file, etc.
-
-exit # back to your user once you are done.
-```
-
-Setup system service. E.g., for Ubuntu, copy the template service file from this repo, adapt it to your system and service user, then start it with systemctl. E.g.,
-
-
-```sh
-sudo cp backend/deployment/persona-analytics.service.template /etc/systemd/system/personal-analytics.service
-sudo vim /etc/systemd/system/personal-analytics.service  # Adapt user, security, path to the software and venv you created during installation, etc. Required.
-```
-
-Now you can use standard systemctl commands to manage the service, e.g.,
-
-```sh
-# Reload systemd to recognize the new service
-sudo systemctl daemon-reload
-
-# Enable to start on boot
-sudo systemctl enable personal-analytics.service
-
-# Start the service now, stop it now, restart it
-sudo systemctl start personal-analytics.service
-sudo systemctl stop personal-analytics.service
-sudo systemctl restart personal-analytics.service
-
-# Check status
-sudo systemctl status personal-analytics.service
-
-# View logs
-sudo journalctl -u personal-analytics.service -f
-```
