@@ -143,3 +143,5 @@ The ports get mapped in the [docker-compose.yml](./docker-compose.yml) file, so 
 
 ## Deployment options
 
+There are many deployment strategies, you can read about one option for deployment directly on Linux (without Docker) in [DEPLOYMENT_LINUX.md](./DEPLOYMENT_LINUX.md).
+
