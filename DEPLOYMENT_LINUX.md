@@ -42,8 +42,7 @@ The frontend will be server as static files by nginx. If you already have a webs
 We assume that on you keep your websites in `/var/www/`, as is the default under Debian/Ubuntu. Then your website would be in `/var/www/your-domain.org/html`, and you would create the sub directory `/var/www/your-domain.org/html/pa/` for the frontend. Simply copy everything from the frontend into that folder, and adapt the backend location:
 
 ```sh
-cd ~/personal-analytics/
-cp frontend/* /var/www/your-domain.org/html/pa/ # may need to do this as another user or with sudo, depending on who owns /var/www/your-domain.org/html
+cp -r ~/personal-analytics/frontend/* /var/www/your-domain.org/html/pa/ # may need to do this as another user or with sudo, depending on who owns /var/www/your-domain.org/html
 vim /var/www/your-domain.org/html/pa/settings.js # adapt the API_BASE_URL to your server. We will assume https://your-domain.org/pa_backend in this document.
 ```
 
@@ -90,17 +89,26 @@ Create app dir, user, and install backend there:
 
 ```sh
 # Create dedicated user
-sudo adduser --system --group --home /opt/personal-analytics personal-analytics
+sudo mkdir -p /opt/pa-backend
+cp -r ~/personal-analytics/backend/* /opt/pa-backend
+sudo adduser --system --group pa-user
 
 # Create app directory
-sudo mkdir -p /opt/personal-analytics/backend
-sudo chown personal-analytics:personal-analytics /opt/personal-analytics
+sudo chown pa-user:pa-user /opt/pa-backend/
+
+
+
+
+# Since the user has no home and cannot login, but needs to run uv, which needs a cache directory (that by default gets created in the user home),
+# we need to do some extra gymnastics
+mkdir -p /var/cache/pa-user/uv
+chown pa-user:pa-user /var/cache/pa-user/
 
 # Switch to service user and install app in the service directory
-sudo su - personal-analytics
-cd /opt/personal-analytics
+cd /opt/pa-backend
+sudo -u pa-user UV_CACHE_DIR=/var/cache/pa-user/ uv venv
+sudo -u pa-user UV_CACHE_DIR=/var/cache/pa-user/ uv run pip install -e .
 
-# Now your part: install the app as described above, with production settings, proper passwords in .env file, etc.
 
 exit # back to your user once you are done.
 ```
