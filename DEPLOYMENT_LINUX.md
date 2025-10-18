@@ -88,27 +88,30 @@ The most critical part if the backend. You should create a system service for it
 Create app dir, user, and install backend there:
 
 ```sh
-# Create dedicated user
+# Copy backend app to installation directory, we will use /opt/pa-backend/
 sudo mkdir -p /opt/pa-backend
-cp -r ~/personal-analytics/backend/* /opt/pa-backend
+sudo cp -r ~/personal-analytics/backend/* /opt/pa-backend
+sudo cp ~/personal-analytics/backend/env.example /opt/pa-backend/.env
+sudo vim /opt/pa-backend/.env # Adapt settings in here.
+
+# Create dedicated user
 sudo adduser --system --group pa-user
 
-# Create app directory
-sudo chown pa-user:pa-user /opt/pa-backend/
-
-
+# Set secure file system permissions for the app dir
+sudo chown -R pa-user:pa-user /opt/pa-backend/
+sudo chmod -R 755 /opt/pa-backend/
+sudo chmod 600 /opt/pa-backend/.env # protect secrets
 
 
 # Since the user has no home and cannot login, but needs to run uv, which needs a cache directory (that by default gets created in the user home),
-# we need to do some extra gymnastics
-mkdir -p /var/cache/pa-user/uv
+# we need to do some extra gymnastics and create a cache directory elsewhere for the user. The proper place is /var/cache/.
+mkdir -p /var/cache/pa-user/
 chown pa-user:pa-user /var/cache/pa-user/
 
 # Switch to service user and install app in the service directory
 cd /opt/pa-backend
-sudo -u pa-user UV_CACHE_DIR=/var/cache/pa-user/ uv venv
-sudo -u pa-user UV_CACHE_DIR=/var/cache/pa-user/ uv run pip install -e .
-
+sudo -u pa-user UV_CACHE_DIR=/var/cache/pa-user/ uv venv   # will create a virtual environment at /opt/pa-backend/.venv
+sudo -u pa-user UV_CACHE_DIR=/var/cache/pa-user/ uv run pip install -e .   # will install into the .venv
 
 exit # back to your user once you are done.
 ```
@@ -117,8 +120,15 @@ Setup system service. E.g., for Ubuntu, copy the template service file from this
 
 
 ```sh
-sudo cp backend/deployment/persona-analytics.service.template /etc/systemd/system/personal-analytics.service
-sudo vim /etc/systemd/system/personal-analytics.service  # Adapt user, security, path to the software and venv you created during installation, etc. Required.
+sudo cp backend/deployment/personal-analytics.service.template /etc/systemd/system/pa-backend
+sudo vim /etc/systemd/system/pa-backend  # Adapt user, security, path to the software and venv you created during installation, etc. Required.
+```
+
+
+Check whether running the service command line you have put into the service file manually works, if we set the same environment as in the file:
+
+```sh
+sudo -u pa-user UV_CACHE_DIR=/var/cache/pa-user/ /opt/pa-backend/.venv/bin/uvicorn personal_analytics_backend.api:app --host 127.0.0.1 --port 8000
 ```
 
 Now you can use standard systemctl commands to manage the service, e.g.,
@@ -128,16 +138,16 @@ Now you can use standard systemctl commands to manage the service, e.g.,
 sudo systemctl daemon-reload
 
 # Enable to start on boot
-sudo systemctl enable personal-analytics.service
+sudo systemctl enable pa-backend
 
 # Start the service now, stop it now, restart it
-sudo systemctl start personal-analytics.service
-sudo systemctl stop personal-analytics.service
-sudo systemctl restart personal-analytics.service
+sudo systemctl start pa-backend
+sudo systemctl stop pa-backend
+sudo systemctl restart pa-backend
 
 # Check status
-sudo systemctl status personal-analytics.service
+sudo systemctl status pa-backend
 
 # View logs
-sudo journalctl -u personal-analytics.service -f
+sudo journalctl -u pa-backend -f
 ```

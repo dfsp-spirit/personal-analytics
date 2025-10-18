@@ -7,9 +7,10 @@ Wants=postgresql.service
 Type=exec
 User=personal-analytics
 Group=personal-analytics
-WorkingDirectory=/opt/personal-analytics/backend
+WorkingDirectory=/opt/personal-analytics/
 Environment=PATH=/opt/personal-analytics/venv/bin
-ExecStart=/opt/personal-analytics/venv/bin/uvicorn personal_analytics_backend.api:app --host 0.0.0.0 --port 8000
+Environment=UV_CACHE_DIR=/var/cache/peronal-analytics
+ExecStart=/opt/personal-analytics/.venv/bin/uvicorn personal_analytics_backend.api:app --host 127.0.0.1 --port 8000
 Restart=always
 RestartSec=10
 TimeoutStopSec=30
