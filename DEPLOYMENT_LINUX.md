@@ -69,16 +69,18 @@ server {
 
     # personal-analytics frontend
     location /pa/ {
-        auth_basic "Restricted Area";
+        auth_basic "PersonalAnalytics";
         auth_basic_user_file /etc/nginx/.htpasswd;
         try_files $uri $uri/ =404;
     }
+
+    # here follows the backend service, see below
 
     # more stuff here maybe, like your certbot/SSL configuration
 }
 ```
 
-If you now restart nginx and connect to https://your-domain.org/pa, you should see the frontend. If you configured password protection, you should be asked for HTTP basic authentication to "Restricted Area", and after you provide `yourwebusername` and `yourwebpassword`, you will see it.
+If you now restart nginx and connect to https://your-domain.org/pa, you should see the frontend. If you configured password protection, you should be asked for HTTP basic authentication for the realm "PersonalAnalytics", and after you provide `yourwebusername` and `yourwebpassword`, you will see it.
 
 
 ## Deployment Part II -- Backend
@@ -151,3 +153,31 @@ sudo systemctl status pa-backend
 # View logs
 sudo journalctl -u pa-backend -f
 ```
+
+There is one thing missing: as you have seen above, we are running uvicorn on the loopback interface only, so it is not accessible from the internet yet. We need to configure a reverse proxy in nginx, which forces users to go through nginx to reach the backend service for security reasons.
+
+Once more, edit your nginx configuration, most likely at `/etc/nginx/sites-available/your-domain.org` and add a section like this for the backend below the frontend section we added before:
+
+```sh
+# The personal-analytics backend
+    location /pa_backend/ {
+        auth_basic "PersonalAnalytics";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+        proxy_pass http://127.0.0.1:8000/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+```
+
+This tells nginx to route any requests for `https://your-domain.org/pa_backend` to the uvicorn server if they passed authentication.
+
+You should now have nginx verify its settings and restart it.
+
+Note that we also protected the backend with HTTP basic auth, using the *same realm* as for the frontend. Using the same real ensures that the browser will send the realm authentication data (`yourwebusername` and `yourwebpassword`, as configured during the frontend setup) it had to send in order to access the frontend also to the backend automatically, so users of the frontend do not even notice this.
+
+If someone was to discover the endpoint though (guess the URL), and try to use it without the frontend (circumvent the frontend via curl, wget, whatever), they would need to provide authentication headers in their request.
+
+Note that users connect to your website ONLY via the standard web ports 80/443 (HTTP/HTTPS), and never directly to uvicorn and port 8000, of course. So there is no need to open your firewall to the internet on that port: leave port 8000/TCP closed. If your webserver worked before, there is no need to mess with any firewall rules.
+
