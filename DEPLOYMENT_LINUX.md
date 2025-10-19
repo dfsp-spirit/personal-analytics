@@ -175,7 +175,7 @@ This tells nginx to route any requests for `https://your-domain.org/pa_backend` 
 
 You should now have nginx verify its settings and restart it.
 
-Note that we also protected the backend with HTTP basic auth, using the *same realm* as for the frontend. Using the same real ensures that the browser will send the realm authentication data (`yourwebusername` and `yourwebpassword`, as configured during the frontend setup) it had to send in order to access the frontend also to the backend automatically, so users of the frontend do not even notice this.
+Note that we also protected the backend with HTTP basic auth, using the *same realm* as for the frontend. Using the same realm ensures that the browser will send the realm authentication data (`yourwebusername` and `yourwebpassword`, as configured during the frontend setup) which it had to send in order to access the frontend in the first place also to the backend automatically, so users of the frontend do not even notice this.
 
 If someone was to discover the endpoint though (guess the URL), and try to use it without the frontend (circumvent the frontend via curl, wget, whatever), they would need to provide authentication headers in their request.
 
