@@ -570,3 +570,136 @@ textarea::placeholder {
 .analysis-results {
     line-height: 1.6;
 }
+
+
+/* Number Slider Styles */
+
+/* Number Slider Hybrid Styles - Matches existing design */
+.number-slider-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.number-slider {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: #ddd;
+    outline: none;
+    margin: 15px 0;
+    -webkit-appearance: none;
+}
+
+.number-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #3498db;
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.number-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #3498db;
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.number-input {
+    width: 120px;
+    padding: 10px 12px;
+    border: 2px solid #e1e8ed;
+    border-radius: 8px;
+    font-size: 1rem;
+    text-align: center;
+    margin: 0 auto;
+    background: white;
+    font-weight: 600;
+    color: #2c3e50;
+    transition: border-color 0.3s ease;
+}
+
+.number-input:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+.number-slider:focus {
+    outline: 2px solid #3498db;
+    outline-offset: 2px;
+}
+
+/* Scale labels - matches your existing style but with 3 labels */
+.number-slider-container .scale-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    margin-top: 8px;
+}
+
+/* Mobile optimization */
+@media (max-width: 768px) {
+    .number-input {
+        width: 100px;
+        padding: 12px;
+        font-size: 1.1rem;
+    }
+
+    .number-slider {
+        height: 8px;
+    }
+
+    .number-slider::-webkit-slider-thumb {
+        width: 24px;
+        height: 24px;
+    }
+
+    .number-slider::-moz-range-thumb {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+/* Animation to match your form groups */
+.number-slider-container {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* Value display styling to match your existing sliders */
+.number-slider-value {
+    text-align: center;
+    font-weight: 600;
+    color: #3498db;
+    font-size: 1.1rem;
+    margin: 10px 0;
+    display: none; /* We don't need this since we have the number input */
+}
+
+/* Focus states match your existing inputs */
+.number-input:focus,
+.number-slider:focus {
+    outline: 2px solid #3498db;
+    outline-offset: 2px;
+}
+
+/* Hover states */
+.number-input:hover {
+    border-color: #bdc3c7;
+}
+
+.number-slider:hover::-webkit-slider-thumb {
+    background: #2980b9;
+}
+
+.number-slider:hover::-moz-range-thumb {
+    background: #2980b9;
+}

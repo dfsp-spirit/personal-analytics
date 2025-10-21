@@ -34,12 +34,81 @@ function generateFormField(fieldName, config) {
         case 'checkbox-group':
             wrapper.appendChild(generateCheckboxGroup(fieldName, config));
             break;
+        case 'number-slider':
+            wrapper.appendChild(generateNumberSlider(fieldName, config));
+            break;
         case 'textarea':
             wrapper.appendChild(generateTextarea(fieldName, config));
             break;
     }
 
     return wrapper;
+}
+
+function generateNumberSlider(fieldName, config) {
+    const container = document.createElement('div');
+    container.className = 'number-slider-container';
+
+    // Use default value if provided, otherwise use min
+    const defaultValue = config.default !== undefined ? config.default : config.min;
+
+    // Create the slider
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.id = fieldName;
+    slider.name = fieldName;
+    slider.min = config.min;
+    slider.max = config.max;
+    slider.step = config.step || 100;
+    slider.value = defaultValue;
+    slider.required = config.required;
+    slider.className = 'number-slider';
+    container.appendChild(slider);
+
+    // Create the number input
+    const numberInput = document.createElement('input');
+    numberInput.type = 'number';
+    numberInput.id = `${fieldName}-number`;
+    numberInput.min = config.min;
+    numberInput.max = config.max;
+    numberInput.step = config.step || 100;
+    numberInput.value = defaultValue;
+    numberInput.required = config.required;
+    numberInput.className = 'number-input';
+    container.appendChild(numberInput);
+
+    // Scale labels
+    if (config.scaleLabels) {
+        const labels = document.createElement('div');
+        labels.className = 'scale-labels';
+        labels.innerHTML = `<span>${config.scaleLabels[0]}</span><span>${config.scaleLabels[1]}</span><span>${config.scaleLabels[2]}</span>`;
+        container.appendChild(labels);
+    }
+
+    // Sync slider and number input
+    function syncValues() {
+        const value = parseInt(slider.value);
+        numberInput.value = value;
+    }
+
+    function syncFromNumber() {
+        let value = parseInt(numberInput.value);
+        // Ensure value is within bounds and stepped correctly
+        value = Math.max(config.min, Math.min(config.max, value));
+        value = Math.round(value / config.step) * config.step;
+
+        slider.value = value;
+        numberInput.value = value; // Update number input to show corrected value
+    }
+
+    slider.addEventListener('input', syncValues);
+    numberInput.addEventListener('input', syncFromNumber);
+    numberInput.addEventListener('change', syncFromNumber); // For when user leaves the field
+
+    // Initialize
+    syncValues();
+
+    return container;
 }
 
 function generateTextarea(fieldName, config) {

@@ -292,7 +292,18 @@ const FORM_CONFIG = {
         required: false,
         default: '',
         parse: (value) => value.trim() || null
-    }
+    },
+    steps: {
+    type: 'number-slider',
+    label: 'Step Count',
+    min: 0,
+    max: 10000,
+    step: 100,
+    scaleLabels: ['0', '5000', '10000'],
+    required: false,
+    default: 5000,
+    parse: (value) => parseInt(value)
+},
 };
 
 // Helper function to flatten all checkbox options
@@ -354,7 +365,6 @@ const FormUtils = {
                 element.value = config.default;
             } else {
                 // For fields without defaults, ensure they're empty
-                // This fixes the textarea issue
                 if (config.type === 'textarea' || element.tagName === 'TEXTAREA') {
                     element.value = '';
                 }
@@ -423,6 +433,14 @@ const FormUtils = {
                         if (checkbox) checkbox.checked = true;
                     }
                 });
+            } else if (config.type === 'number-slider') {
+                const element = document.getElementById(fieldName);
+                const numberElement = document.getElementById(`${fieldName}-number`);
+                if (element && numberElement) {
+                    element.value = data[fieldName];
+                    numberElement.value = data[fieldName];
+                }
+
 
             } else {
                 // For other field types, use getElementById
