@@ -141,6 +141,20 @@ The ports get mapped in the [docker-compose.yml](./docker-compose.yml) file, so 
 * PostgreSQL: postgresql://localhost:5432
 
 
+## Documentation
+
+* How to configure the form to my needs, i.e., change the questions in the questionaire?
+    - In the frontend: the form is generated from the definition in variable `FORM_CONFIG` in file [frontend/form-config.js](./frontend/form-config.js). Look at the examples and add or replace the fields as you see fit.
+    - In the backend: each key in the FORM_CONFIG of the frontend goes to a column in the database. You need to adapt the data model in the file [backend/src/personal_analytics_backend/models.py](./backend/src/personal_analytics_backend/models.py) to suit the changes you made in the frontend. Have a look at the existing data, it's easy.
+* I need a new custom input component that is not available yet, i.e., my new entry to the `FORM_CONFIG` must have a type other than the existing ones (`slider`, `radio`, `select`, ...).
+    - In that case you will need to make changes to several functions in the frontend:
+        * Add a new field to your FORM_CONFIG in form-config.js that uses your new type, so that you can see whether it works.
+        * In form-generator.js, add a new function `function generateYourNewCustomComponent(fieldName, config) {...}`. It should generate the HTML for the component, see existing examples like `generateNumberSlider()`.
+        * in form-generator.js, update the main switch statement in the function `generateFormField()`: In the `switch(config.type) {...\}` statement, add a new case for the new form type of your custom component.
+        * In form-config.js, update the `loadDataIntoForm()` function to handle fields with your new component type. The function muss take the data saved to the database and use it to fill the component, so that the component can correctly display existing entries. Take a look at the other examples, it's easy.
+        * In styles.css, add the new style definitions for your component
+    - As descibed above, you will also need to adapt the database model to make sure the new field that will be send to the backend is recognized and saved properly.
+
 ## Deployment options
 
 There are many deployment strategies, you can read about one option for deployment directly on Linux (without Docker) in [DEPLOYMENT_LINUX.md](./DEPLOYMENT_LINUX.md).
