@@ -135,6 +135,19 @@ NOTE: Now we have the data for the backend in the app directory, but the app is 
 
 Let us continue with the database setup first. Ensure you have a postgresql server running in a production setup.
 
+```sh
+sudo apt install postgresql
+```
+
+Make sure you have hardened your postgresql installation for production, e.g., you may want to:
+
+* Change the postgres database user password
+* Configure `pg_hba.conf` to reject external connections: set listen_addresses = 'localhost'
+* Set up firewall rules that additionally deny access to the postgresql port
+* Set up proper file permissions, e.g., hide database config files in /etc/ from normal users
+* Configure logging (and monitor the logs)
+* Think about and create a regular backup procedure
+
 Then run the script to create the application-specfic database and the database user that comes with the backend.
 
 The script uses sudo to change to the postgresql system user and then uses postgresql peer auth to connect to the

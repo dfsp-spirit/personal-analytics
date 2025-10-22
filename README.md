@@ -72,7 +72,7 @@ Then setup the postgresql database:
 ```sh
 sudo apt install postgresql
 cd backend/
-./setup_db.sh   # will use settings from <repo_root>/backend/.env, requires sudo
+sudo ./setup_db.sh   # will use settings from <repo_root>/backend/.env, requires sudo
 ```
 
 
