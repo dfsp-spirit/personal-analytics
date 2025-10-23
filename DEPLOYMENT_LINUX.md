@@ -42,15 +42,27 @@ The frontend will be server as static files by nginx. If you already have a webs
 We assume that on you keep your websites in `/var/www/`, as is the default under Debian/Ubuntu. Then your website would be in `/var/www/your-domain.org/html`, and you would create the sub directory `/var/www/your-domain.org/html/pa/` for the frontend. Simply copy everything from the frontend into that folder, and adapt the backend location:
 
 ```sh
-cp -r ~/personal-analytics/frontend/* /var/www/your-domain.org/html/pa/ # may need to do this as another user or with sudo, depending on who owns /var/www/your-domain.org/html
+cp -r ~/personal-analytics/frontend/* /var/www/your-domain.org/html/pa/ # your user should own /var/www/your-domain.org/, so you should NOT need sudo for this.
 vim /var/www/your-domain.org/html/pa/settings.js # adapt the API_BASE_URL to your server. We will assume https://your-domain.org/pa_backend in this document.
 ```
+
+Now let us make sure the permissions for the web directory are correct: the files are owned by your user, but the group gives the nginx user (`www-data` under Debian/Ubuntu) read permissions.
+
+```sh
+sudo chown -R $USER:www-data /var/www/your-domain.org/html/pa
+sudo find /var/www/your-domain.org/html/pa -type d -exec chmod 755 {} \;
+sudo find /var/www/your-domain.org/html/pa -type f -exec chmod 644 {} \;
+```
+NOTE: The setup implemented by the commands above does **not** allow nginx to write to files in the web directory of the personal analytics app, `html/pa/`. This is a secure setup for our app, which does not require any uploads to the server, or the server writing some form of other files to the web directory.
+
 
 If you want, setup password protection for that directory. Come up with a suitable username and password, then:
 
 ```sh
-sudo apt install apache2-utils
+sudo apt install apache2-utils # for htpasswd, does NOT install apache2 server.
 sudo htpasswd -c /etc/nginx/.htpasswd yourwebusername # will ask for yourwebpassword
+sudo chown root:www-data /etc/nginx/.htpasswd
+sudo chmod 640 /etc/nginx/.htpasswd
 ```
 
 Then, in your nginx configuration, most likely at `/etc/nginx/sites-available/your-domain.org`, you would have something like this for the frontend:
@@ -62,9 +74,10 @@ server {
     root /var/www/your-domain.org/html;
     index index.html;
 
-    # your public website, if you already have one.
+    # your existing public website, if you already have one.
     location / {
         try_files $uri $uri/ =404;
+        # Here follow general security settings
     }
 
     # personal-analytics frontend
@@ -72,32 +85,87 @@ server {
         auth_basic "PersonalAnalytics";
         auth_basic_user_file /etc/nginx/.htpasswd;
         try_files $uri $uri/ =404;
+        # Security recommendations for /pa/ location:
+        # - Rate limiting (limit_req with limit_req_zone in http context)
+        # - Security headers:
+        #   add_header X-Frame-Options "SAMEORIGIN" always;
+        #   add_header X-Content-Type-Options "nosniff" always;
+        #   add_header X-XSS-Protection "1; mode=block" always;
+        #   server_tokens off;
+        # - Other nginx security best practices
     }
 
-    # here follows the backend service, see below
+    # Here follows the backend service later, see below.
 
-    # more stuff here maybe, like your certbot/SSL configuration
+    # Here follow general security settings of this server, like:
+    #  - your certbot/SSL configuration
+    #  - rate limiting
+    #  - restricting accessible file types
+    #  - ...
 }
 ```
+
+Note: This nginx configuration is app-specific only and does not address general server security. Ensure your production nginx setup includes proper SSL, rate limiting, and other security hardening measures.
 
 If you now restart nginx and connect to https://your-domain.org/pa, you should see the frontend. If you configured password protection, you should be asked for HTTP basic authentication for the realm "PersonalAnalytics", and after you provide `yourwebusername` and `yourwebpassword`, you will see it.
 
 
-## Deployment Part II -- Backend
+## Deployment Part II -- Backend (including Database)
 
-The most critical part if the backend. You should create a system service for it, along with a dedicated user.
+The most critical part is the backend.
 
-Create app dir, user, and install backend there:
+We will create a system service for it, along with a dedicated user, that ensure the service is:
+
+* run in a secure and isolated way by a dedicated system user
+* automatically run at boot
+* automatically restarted when it is stopped for other reasons
+
+
+Create the installation directory for the backend application and copy the files there:
 
 ```sh
 # Copy backend app to installation directory, we will use /opt/pa-backend/
 sudo mkdir -p /opt/pa-backend
 sudo cp -r ~/personal-analytics/backend/* /opt/pa-backend
 sudo cp ~/personal-analytics/backend/env.example /opt/pa-backend/.env
-sudo vim /opt/pa-backend/.env # Adapt settings in here.
+sudo vim /opt/pa-backend/.env # Adapt settings in here, like database credentials.
+```
 
-# Create dedicated user
-sudo adduser --system --group pa-user
+NOTE: Now we have the data for the backend in the app directory, but the app is not installed yet: we have not run pip to install the dependencies, like the WSGI server. We will do that later, after we have created a separate user that will run the app.
+
+Let us continue with the database setup first. Ensure you have a postgresql server running in a production setup.
+
+```sh
+sudo apt install postgresql
+```
+
+Make sure you have hardened your postgresql installation for production, e.g., you may want to:
+
+* Change the postgres database user password
+* Configure `pg_hba.conf` to reject external connections: set listen_addresses = 'localhost'
+* Set up firewall rules that additionally deny access to the postgresql port
+* Set up proper file permissions, e.g., hide database config files in /etc/ from normal users
+* Configure logging (and monitor the logs)
+* Think about and create a regular backup procedure
+
+Then run the script to create the application-specfic database and the database user that comes with the backend.
+
+The script uses sudo to change to the postgresql system user and then uses postgresql peer auth to connect to the
+database server as the database root user `postgres`. As this user, it creates the database, database user and password used by personal analytics.
+
+You need to run this script as root, or as a user that is allowed to sudo to the postgres systems user.
+
+NOTE: This script will set the database credentials you defined earlier in `/opt/pa-backend/.env`, so ensure they are strong and unique to this application. If you did not adapt them, you are now using the password that is public on the internet, in the source code of this repo, and your server may get compromized.
+
+```sh
+sudo /opt/pa-backend/src/setup_db.sh
+```
+
+Now that we have the database ready, let us create a dedicated system user who will run the backend app and adapt the file system permissions accordingly.
+
+```sh
+# Create dedicated system user with minimal privileges
+sudo adduser --system --group --shell /usr/sbin/nologin pa-user
 
 # Set secure file system permissions for the app dir
 sudo chown -R pa-user:pa-user /opt/pa-backend/
@@ -107,18 +175,16 @@ sudo chmod 600 /opt/pa-backend/.env # protect secrets
 
 # Since the user has no home and cannot login, but needs to run uv, which needs a cache directory (that by default gets created in the user home),
 # we need to do some extra gymnastics and create a cache directory elsewhere for the user. The proper place is /var/cache/.
-mkdir -p /var/cache/pa-user/
-chown pa-user:pa-user /var/cache/pa-user/
+sudo mkdir -p /var/cache/pa-user/
+sudo chown pa-user:pa-user /var/cache/pa-user/
 
 # Switch to service user and install app in the service directory
 cd /opt/pa-backend
 sudo -u pa-user UV_CACHE_DIR=/var/cache/pa-user/ uv venv   # will create a virtual environment at /opt/pa-backend/.venv
 sudo -u pa-user UV_CACHE_DIR=/var/cache/pa-user/ uv run pip install -e .   # will install into the .venv
-
-exit # back to your user once you are done.
 ```
 
-Setup system service. E.g., for Ubuntu, copy the template service file from this repo, adapt it to your system and service user, then start it with systemctl. E.g.,
+Setup a system service. E.g., for Ubuntu, copy the template service file from this repo, adapt it to your system and service user, then start it with systemctl. E.g.,
 
 
 ```sh
@@ -127,9 +193,10 @@ sudo vim /etc/systemd/system/pa-backend  # Adapt user, security, path to the sof
 ```
 
 
-Check whether running the service command line you have put into the service file manually works, if we set the same environment as in the file:
+Check whether running the service command line you have put into the service file manually works, if we set the same environment as in the file (note that in the file, the `UV_CACHE_DIR` variable is set in a separate ENVIRONMENT line):
 
 ```sh
+# Test the service (make sure to stop it with Ctrl+C when done)
 sudo -u pa-user UV_CACHE_DIR=/var/cache/pa-user/ /opt/pa-backend/.venv/bin/uvicorn personal_analytics_backend.api:app --host 127.0.0.1 --port 8000
 ```
 
@@ -163,7 +230,7 @@ Once more, edit your nginx configuration, most likely at `/etc/nginx/sites-avail
     location /pa_backend/ {
         auth_basic "PersonalAnalytics";
         auth_basic_user_file /etc/nginx/.htpasswd;
-        proxy_pass http://127.0.0.1:8000/;
+        proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

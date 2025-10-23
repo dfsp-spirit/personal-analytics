@@ -5,12 +5,12 @@ Wants=postgresql.service
 
 [Service]
 Type=exec
-User=personal-analytics
-Group=personal-analytics
-WorkingDirectory=/opt/personal-analytics/
-Environment=PATH=/opt/personal-analytics/venv/bin
-Environment=UV_CACHE_DIR=/var/cache/peronal-analytics
-ExecStart=/opt/personal-analytics/.venv/bin/uvicorn personal_analytics_backend.api:app --host 127.0.0.1 --port 8000
+User=pa-user
+Group=pa-user
+WorkingDirectory=/opt/pa-backend/
+Environment=PATH=/opt/pa-backend/.venv/bin
+Environment=UV_CACHE_DIR=/var/cache/pa-user
+ExecStart=/opt/pa-backend/.venv/bin/uvicorn personal_analytics_backend.api:app --host 127.0.0.1 --port 8000
 Restart=always
 RestartSec=10
 TimeoutStopSec=30
@@ -21,7 +21,7 @@ NoNewPrivileges=yes
 PrivateTmp=yes
 ProtectSystem=strict
 ProtectHome=yes
-ReadWritePaths=/opt/personal-analytics
+ReadWritePaths=/opt/pa-backend/
 
 # Logging
 StandardOutput=journal

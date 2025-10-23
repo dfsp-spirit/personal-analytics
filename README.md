@@ -72,7 +72,7 @@ Then setup the postgresql database:
 ```sh
 sudo apt install postgresql
 cd backend/
-./setup_db.sh   # will use settings from <repo_root>/backend/.env, requires sudo
+sudo ./setup_db.sh   # will use settings from <repo_root>/backend/.env, requires sudo
 ```
 
 
@@ -95,7 +95,7 @@ To run it once its installed:
 
 ```sh
 # still in <repo>/backend/
-uv run uvicorn personal_analytics_backend.api:app --reload --host 0.0.0.0 --port 8000
+uv run uvicorn personal_analytics_backend.api:app --reload --host 127.0.0.1 --port 8000
 ```
 
 You can now access your services:
@@ -144,8 +144,11 @@ The ports get mapped in the [docker-compose.yml](./docker-compose.yml) file, so 
 ## Documentation
 
 * How to configure the form to my needs, i.e., change the questions in the questionaire?
-    - In the frontend: the form is generated from the definition in variable `FORM_CONFIG` in file [frontend/form-config.js](./frontend/form-config.js). Look at the examples and add or replace the fields as you see fit.
-    - In the backend: each key in the FORM_CONFIG of the frontend goes to a column in the database. You need to adapt the data model in the file [backend/src/personal_analytics_backend/models.py](./backend/src/personal_analytics_backend/models.py) to suit the changes you made in the frontend. Have a look at the existing data, it's easy.
+    - In the frontend:
+        * the form is generated from the definition in variable `FORM_CONFIG` in file [frontend/form-config.js](./frontend/form-config.js). Look at the examples and add or replace the fields as you see fit.
+    - In the backend:
+  -     * each key in the FORM_CONFIG of the frontend goes to a column in the database. You need to adapt the data model in the file [backend/src/personal_analytics_backend/models.py](./backend/src/personal_analytics_backend/models.py) to suit the changes you made in the frontend. Have a look at the existing entries, it's easy.
+  -     * in the file [backend/src/personal_analytics_backend/api.py](./backend/src/personal_analytics_backend/api.py), you need to adapt the functions `export_all_data_csv()` so that your new fields are handled on data export to CSV files. The function `export_all_data_json()` in the same file should not need changes typically, but double-check it.
 * I need a new custom input component that is not available yet, i.e., my new entry to the `FORM_CONFIG` must have a type other than the existing ones (`slider`, `radio`, `select`, ...).
     - In that case you will need to make changes to several functions in the frontend:
         * Add a new field to your `FORM_CONFIG` in [form-config.js](./frontend/form-config.js) that uses your new type, so that you can see whether it works.
@@ -154,6 +157,17 @@ The ports get mapped in the [docker-compose.yml](./docker-compose.yml) file, so 
         * In [form-config.js](./frontend/form-config.js), update the `loadDataIntoForm()` function to handle fields with your new component type. The function muss take the data saved to the database and use it to fill the component, so that the component can correctly display existing entries. Take a look at the other examples, it's easy.
         * In [styles.css](./frontend/styles.css), add the new style definitions for your component
     - As descibed above, you will also need to adapt the database model to make sure the new field that will be send to the backend is recognized and saved properly.
+        * Add a new field to your FORM_CONFIG in form-config.js that uses your new type, so that you can see whether it works.
+        * In [form-generator.js](./frontend/form-generator.js), add a new function `function generateYourNewCustomComponent(fieldName, config) {...}`. It should generate the HTML for the component, see existing examples like `generateNumberSlider()`.
+        * in [form-generator.js](./frontend/form-generator.js), update the main switch statement in the function `generateFormField()`: In the `switch(config.type) {...\}` statement, add a new case for the new form type of your custom component.
+        * In form-config.js, update the `loadDataIntoForm()` function to handle fields with your new component type. The function muss take the data saved to the database and use it to fill the component, so that the component can correctly display existing entries. Take a look at the other examples, it's easy.
+        * In [styles.css](./frontend/styles.css), add the new style definitions for your component
+    - As descibed in the first question above, you will also need to adapt the database model to make sure the new field that will be send to the backend is recognized and saved properly, and adapt the data export functions.
+
+## Troubleshooting
+
+* When opening the web app in the browser, I see no data. In web developer tools console, I see a network error with reason 'CORS request not HTTP'. Wtf?
+    - There are different options where this happens, but some recource you load is not loaded from HTTP/HTTPS scheme (a link starting with `http://` or `https://`), but something different, e.g., `file:///` or interpreted as such. This can happen if you give, in the frontend/settings.js, something like `const API_BASE_URL = 'localhost:8000';` instead of `const API_BASE_URL = 'http://localhost:8000';` or `const API_BASE_URL = 'https://your-domain.org:8000';`. It can also happen if you really load something via a `file:///` URL, which can easily be checked by something like `fgreg -rni 'file://' frontend/` in the shell.
 
 ## Deployment options
 

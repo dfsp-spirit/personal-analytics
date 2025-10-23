@@ -7,7 +7,10 @@ import logging
 import uuid
 from typing import List, Optional
 from datetime import datetime, timedelta
-
+import csv
+import json
+import io
+from fastapi.responses import StreamingResponse
 
 from sqlmodel import Session, select
 
@@ -439,3 +442,122 @@ def get_summary_stats(session: Session = Depends(get_session)):
             'end_date': streak_result.end_date if streak_result else None
         } if streak_result else None
     }
+
+
+@app.get("/export/csv")
+def export_all_data_csv(session: Session = Depends(get_session)):
+    """Export all health data as CSV for analysis in pandas/excel"""
+
+    # Get all entries ordered by date
+    entries = session.exec(
+        select(HealthEntry).order_by(HealthEntry.date)
+    ).all()
+
+    if not entries:
+        raise HTTPException(status_code=404, detail="No data to export")
+
+    # Create CSV in memory
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    # Define CSV headers - include all fields from your model
+    headers = [
+        'id', 'date', 'timestamp', 'day_of_week', 'day_name', 'is_weekend',
+        'mood', 'pain', 'anxiety', 'energy',
+        'allergy_state', 'allergy_medication',
+        'had_sex', 'sleep_quality',
+        'stress_level_work', 'stress_level_home',
+        'social_support', 'physical_activity', 'weather_enjoyment',
+        'daily_comments'
+    ]
+
+    # Add daily_activities columns (flatten the JSON)
+    # Get all possible activity keys from the first entry that has activities
+    activity_columns = set()
+    for entry in entries:
+        if entry.daily_activities:
+            activity_columns.update(entry.daily_activities.keys())
+
+    # Sort activity columns for consistent ordering
+    activity_columns = sorted(activity_columns)
+    headers.extend(activity_columns)
+
+    writer.writerow(headers)
+
+    # Write data rows
+    for entry in entries:
+        row = [
+            entry.id,
+            entry.date,
+            entry.timestamp.isoformat() if entry.timestamp else '',
+            entry.day_of_week,
+            entry.day_name if hasattr(entry, 'day_name') else '',  # Use computed property
+            entry.is_weekend if hasattr(entry, 'is_weekend') else '',  # Use computed property
+            entry.mood,
+            entry.pain,
+            entry.anxiety,
+            entry.energy,
+            entry.allergy_state,
+            entry.allergy_medication,
+            entry.had_sex,
+            entry.sleep_quality,
+            entry.stress_level_work,
+            entry.stress_level_home,
+            entry.social_support,
+            entry.physical_activity,
+            entry.weather_enjoyment,
+            entry.daily_comments or ''  # Handle None values
+        ]
+
+        # Add activity columns (1 for present, 0 for absent)
+        activities = entry.daily_activities or {}
+        for activity in activity_columns:
+            row.append(1 if activities.get(activity) == 1 else 0)
+
+        writer.writerow(row)
+
+    # Return as downloadable CSV file
+    output.seek(0)
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename=health_data_export_{today}.csv",
+            "Content-Type": "text/csv; charset=utf-8"
+        }
+    )
+
+
+@app.get("/export/json")
+def export_all_data_json(session: Session = Depends(get_session)):
+    """Export all health data as JSON"""
+
+    entries = session.exec(
+        select(HealthEntry).order_by(HealthEntry.date)
+    ).all()
+
+    if not entries:
+        raise HTTPException(status_code=404, detail="No data to export")
+
+    # Convert to list of dicts
+    data = []
+    for entry in entries:
+        entry_dict = entry.dict()
+        # Convert datetime to ISO string for JSON serialization
+        entry_dict['timestamp'] = entry.timestamp.isoformat() if entry.timestamp else None
+        # Add computed properties
+        entry_dict['day_name'] = entry.day_name
+        entry_dict['is_weekend'] = entry.is_weekend
+        data.append(entry_dict)
+
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    return Response(
+        content=json.dumps(data, indent=2, ensure_ascii=False),
+        media_type="application/json",
+        headers={
+            "Content-Disposition": f"attachment; filename=health_data_export_{today}.json"
+        }
+    )
