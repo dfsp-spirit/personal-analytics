@@ -115,7 +115,7 @@
             <div id="lagged-analysis" class="analysis-results"></div>
         </div>
 
-                <!-- Data Download Section -->
+        <!-- Data Download Section -->
         <div class="stats-section">
             <h2>Data Export</h2>
             <div class="download-section">
@@ -126,6 +126,9 @@
                     </button>
                     <button id="download-json" class="download-btn">
                         📁 Download JSON
+                    </button>
+                    <button id="download-dictionary" class="download-btn">
+                        📖 Data Dictionary
                     </button>
                 </div>
                 <p class="download-note">
@@ -138,6 +141,7 @@
 
 
     <script src="settings.js"></script>
+    <script src="form-config.js"></script>
     <script>
         let chart = null;
 
@@ -478,6 +482,55 @@ async function downloadData(format) {
         alert(`Failed to download ${format.toUpperCase()} file: ${error.message}`);
     }
 }
+
+// Data dictionary generation
+function generateDataDictionary() {
+    const dictionary = {};
+
+    Object.entries(FORM_CONFIG).forEach(([fieldName, config]) => {
+        dictionary[fieldName] = {
+            label: config.label,
+            type: config.type,
+            description: config.scaleLabels ? config.scaleLabels.join(' | ') : null
+        };
+
+        // Add value mappings for radio/select fields
+        if (config.options) {
+            dictionary[fieldName].value_mappings = config.options;
+        }
+
+        // Add encoding info for radio fields with encoding
+        if (config.encoding) {
+            dictionary[fieldName].encoding = config.encoding;
+        }
+
+        // Add checkbox group structure
+        if (config.type === 'checkbox-group' && config.categories) {
+            dictionary[fieldName].categories = config.categories;
+        }
+    });
+    console.log("Generated Data Dictionary:", dictionary);
+    return dictionary;
+}
+
+// Add event listener for the dictionary download
+document.getElementById('download-dictionary').addEventListener('click', function() {
+    console.log("Generating data dictionary...");
+    const dictionary = generateDataDictionary();
+    const dataStr = JSON.stringify(dictionary, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+
+    console.log("Dictionary:", dictionary);
+
+    const url = window.URL.createObjectURL(dataBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'health_data_dictionary.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+});
 
 
     </script>
