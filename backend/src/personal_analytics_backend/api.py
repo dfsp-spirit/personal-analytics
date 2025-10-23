@@ -25,7 +25,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["X-Operation"]
+    expose_headers=["X-Operation"] # custom header to tell frontend on submit if the entry was created or updated.
 )
 
 @app.on_event("startup")
