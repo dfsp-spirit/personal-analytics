@@ -160,7 +160,7 @@ The ports from the containers get mapped to your host in the [docker-compose.yml
 
 * Frontend: http://localhost
 * Backend API: http://localhost:8000
-* PostgreSQL: postgresql://localhost:5432
+* PostgreSQL: postgresql://localhost:5555
 
 
 ## Quick Documentation

@@ -1,4 +1,3 @@
-version: '3.8'
 
 # Note on .env file location:
 #
@@ -21,7 +20,7 @@ services:
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
     ports:
-      - "${DATABASE_PORT}:5432"
+      - "5555:${DATABASE_PORT}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -43,7 +42,7 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./backend/src:/app/src
+      - ./backend:/app:delegated
     command: uvicorn personal_analytics_backend.api:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
@@ -55,8 +54,8 @@ services:
       - "3000:80"
     depends_on:
       - backend
-    environment:
-      - API_BASE_URL=http://backend:8000
+    volumes:
+      - ./frontend:/usr/share/nginx/html:delegated
 
 volumes:
   postgres_data:
