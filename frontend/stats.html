@@ -114,7 +114,28 @@
             <h2>Day-to-Day Relationships</h2>
             <div id="lagged-analysis" class="analysis-results"></div>
         </div>
+
+                <!-- Data Download Section -->
+        <div class="stats-section">
+            <h2>Data Export</h2>
+            <div class="download-section">
+                <p>Download your complete health data for backup or analysis:</p>
+                <div class="download-buttons">
+                    <button id="download-csv" class="download-btn">
+                        📊 Download CSV
+                    </button>
+                    <button id="download-json" class="download-btn">
+                        📁 Download JSON
+                    </button>
+                </div>
+                <p class="download-note">
+                    CSV is recommended for analysis in Excel or pandas. JSON preserves all data structure.
+                </p>
+            </div>
+        </div>
+
     </div>
+
 
     <script src="settings.js"></script>
     <script>
@@ -411,6 +432,54 @@ async function loadAllAnalytics() {
 
         // Initialize chart on page load
         window.addEventListener('load', loadAllAnalytics);
+
+    // Data download functionality
+document.getElementById('download-csv').addEventListener('click', async function() {
+    await downloadData('csv');
+});
+
+document.getElementById('download-json').addEventListener('click', async function() {
+    await downloadData('json');
+});
+
+async function downloadData(format) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/export/${format}`);
+
+        if (!response.ok) {
+            throw new Error(`Failed to download ${format.toUpperCase()}`);
+        }
+
+        // Create download link
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+
+        // Get filename from Content-Disposition header or generate one
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = `health_data_export.${format}`;
+
+        if (contentDisposition) {
+            const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+            if (filenameMatch) {
+                filename = filenameMatch[1];
+            }
+        }
+
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+        console.error(`Error downloading ${format.toUpperCase()}:`, error);
+        alert(`Failed to download ${format.toUpperCase()} file: ${error.message}`);
+    }
+}
+
+
     </script>
 </body>
 </html>

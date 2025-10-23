@@ -703,3 +703,83 @@ textarea::placeholder {
 .number-slider:hover::-moz-range-thumb {
     background: #2980b9;
 }
+
+
+/* Data Download Section Styles for stats page */
+.download-section {
+    background: #f8f9fa;
+    padding: 24px;
+    border-radius: 8px;
+    border-left: 4px solid #3498db;
+    margin-top: 20px;
+}
+
+.download-section p {
+    margin-bottom: 16px;
+    color: #2c3e50;
+    font-size: 1rem;
+}
+
+.download-buttons {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.download-btn {
+    padding: 14px 24px;
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.download-btn:hover {
+    background: linear-gradient(135deg, #2980b9, #3498db);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+}
+
+.download-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3);
+}
+
+.download-btn:focus {
+    outline: 3px solid rgba(52, 152, 219, 0.3);
+    outline-offset: 2px;
+}
+
+.download-note {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    font-style: italic;
+    margin-top: 12px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .download-buttons {
+        flex-direction: column;
+    }
+
+    .download-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .download-section {
+        padding: 20px;
+    }
+}
+
+/* END Download Section Styles for stats page */
