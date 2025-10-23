@@ -121,18 +121,29 @@
             <div class="download-section">
                 <p>Download your complete health data for backup or analysis:</p>
                 <div class="download-buttons">
-                    <button id="download-csv" class="download-btn">
-                        📊 Download CSV
-                    </button>
-                    <button id="download-json" class="download-btn">
-                        📁 Download JSON
-                    </button>
-                    <button id="download-dictionary" class="download-btn">
-                        📖 Metadata Dictionary
-                    </button>
+                    <div class="download-button-group">
+                        <button id="download-csv" class="download-btn">
+                            📊 Download CSV
+                        </button>
+                        <small class="filename">health_data_YYYY-MM-DD.csv</small>
+                    </div>
+
+                    <div class="download-button-group">
+                        <button id="download-json" class="download-btn">
+                            📁 Download JSON
+                        </button>
+                        <small class="filename">health_data_YYYY-MM-DD.json</small>
+                    </div>
+
+                    <div class="download-button-group">
+                        <button id="download-dictionary" class="download-btn">
+                            📖 Metadata Dictionary
+                        </button>
+                        <small class="filename">health_data_dictionary.json</small>
+                    </div>
                 </div>
                 <p class="download-note">
-                    CSV is recommended for analysis in Excel or pandas. JSON preserves all data structure. The dictionary describes all fields, including the meaning of encoded values.
+                    CSV is recommended for analysis in R or pandas. JSON preserves all data structure. The metadata dictionary describes all fields, including the meaning of encoded values.
                 </p>
             </div>
         </div>
