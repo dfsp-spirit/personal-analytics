@@ -8,11 +8,6 @@
 #  3) the database server is running on the same machine
 #  4) peer authentication is enabled in postgres for local connections
 #
-# If you have a the database server running on a different machine (including a docker container with port mapping to localhost), you will
-# need to adapt the 'psql' command to connect to the remote server, host, port, and authentication method. Peer authentication will not work in that case.
-# In that case, the .env file in this directory may not be the correct one to use. Use the env file that is used by the backend application. For docker,
-# that is the .env file in the parent directory (the root of the project/repo).
-#
 # Usage: ./drop_database.sh
 
 echo "=== Drop database of the personal-analytics web app, deleting all analytics data ==="

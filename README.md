@@ -18,8 +18,6 @@ Very early alpha, definitely not ready for production.
 
 This section explains how to install and run the app for development. It assumes you have some Debian/Ubuntu flavor, but this works on all distros of course. You may need to adapt the paths of system-wide config files or the commands for package installation to your preferred OS, of course.
 
-We assume you want to install directly on your system (bare metal like your laptop, vServer or VM). If you want to use Docker containers, see below for short Docker-based instructions.
-
 
 ### Frontend Installation for Development
 
@@ -113,54 +111,6 @@ You can now access your services:
 * Backend API: http://localhost:8000
 * PostgreSQL: postgresql://localhost:5432 or using peer authentication as system user `postgresql` (if allowed in your system's `pg_hba.conf`)
 
-## Alternative Development Setup: Use Docker to run both the Frontend and the Backend in containers (development mode)
-
-**IMPORTANT**: *The Docker setup provided in this repo is meant for development. Do not use it for production under any circumstances! It does many things that are not secure, e.g., no HTTPS, expose uvicorn directly, it uses an insecure database setup, etc.*
-
-Make sure you have `docker` and docker compose, and that you are allowed to use it. If you're not in the `docker` system group, you will have to use `sudo` to run docker.
-
-Note that [docker-compose.yml](./docker-compose.yml) maps the postgresql port of the container to the default postgresql port on your host system, so you can easily access the database. This will of course fail if that port is already in use, e.g. by a postgresql server running on your host system. In that case, either change the port mapping in the Docker compose file, or change the port of your local postgresql server. Same goes for the default HTTP port, 80.
-
-Note that in our development Docker image, the backend does not run on `localhost`, but on the virtual `backend` machine. Therefore, the Dockerfile copies `frontend/settings.docker.js` over `frontend/settings.js`. In that file, the default is `const API_BASE_URL = 'http://backend:8000'`.
-
-If you want to change the configuration of ports or other things for the Docker version, be it ports used by the containers internally or those exposed to your host, you will need to edit the `Dockerfile` in the frontend directory, the `Dockerfile` in the backend directory, and the `docker-compose.yml` in the repo root that maps the ports to your machine, in a consistent way. We do not recommend changing any of this though.
-
-Let's get started with the recommended setup:
-
-First create the file `<repo_root>/.env` with database credentials. You can copy the template file and edit it:
-
-```sh
-cp backend/.env.example .env
-vim .env # Adapt it!
-```
-
-Now start all services (may require `sudo` if you are not in the `docker` system group). The following command will:
-
-* Start 3 containers `postgres`, `backend`, and `frontend`
-* Read `<repo_root>/.env` and pass the credentials in there to the containers `postgres` and `backend`, for the database setup and for the backend to connect to the database
-* For the frontend, copy the file `frontend/settings.docker.js` from this repo over `frontend/settings.js` in the container, so that the backend URL is correct for Docker
-
-Try it now:
-
-```sh
-docker-compose up -d
-```
-
-Some other useful docker commands:
-
-```sh
-docker-compose logs -f   # Check logs
-
-docker-compose down      # Stop everything
-
-docker-compose down -v    # Stop and remove volumes (full cleanup)
-```
-
-The ports from the containers get mapped to your host in the [docker-compose.yml](./docker-compose.yml) file, so you can access all services directly from the host computer:
-
-* Frontend: http://localhost
-* Backend API: http://localhost:8000
-* PostgreSQL: postgresql://localhost:5555
 
 
 ## Quick Documentation
@@ -198,5 +148,5 @@ The ports from the containers get mapped to your host in the [docker-compose.yml
 
 ## Deployment options
 
-There are many deployment strategies, you can read about one option for deployment directly on Linux (without Docker) in [DEPLOYMENT_LINUX.md](./DEPLOYMENT_LINUX.md).
+There are many deployment strategies, you can read about one option for deployment directly on Linux in [DEPLOYMENT_LINUX.md](./DEPLOYMENT_LINUX.md).
 
