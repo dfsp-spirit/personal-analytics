@@ -185,22 +185,20 @@ sudo -u pa-user UV_CACHE_DIR=/var/cache/pa-user/ uv venv   # will create a virtu
 sudo -u pa-user UV_CACHE_DIR=/var/cache/pa-user/ uv pip install -e .   # will install into the .venv
 ```
 
-Setup a system service. E.g., for Ubuntu, copy the template service file from this repo, adapt it to your system and service user, then start it with systemctl. E.g.,
+Ensure you can start the backend manually:
+
+```sh
+# Test running the backend standalone, without the service. (make sure to stop it with Ctrl+C when done)
+sudo -u pa-user UV_CACHE_DIR=/var/cache/pa-user/ uv run uvicorn personal_analytics_backend.api:app --host 127.0.0.1 --port 8000
+```
+
+Once that works, setup a system service. E.g., for Ubuntu, copy the template service file from this repo, adapt it to your system and service user, then start it with systemctl. E.g.,
 
 
 ```sh
 sudo cp backend/deployment/personal-analytics.service.template /etc/systemd/system/pa-backend
 sudo vim /etc/systemd/system/pa-backend  # Adapt user, security, path to the software and venv you created during installation, etc. Required.
 ```
-
-
-Check whether running the service command line you have put into the service file manually works, if we set the same environment as in the file (note that in the file, the `UV_CACHE_DIR` variable is set in a separate ENVIRONMENT line):
-
-```sh
-# Test the service (make sure to stop it with Ctrl+C when done)
-sudo -u pa-user UV_CACHE_DIR=/var/cache/pa-user/ uv run uvicorn personal_analytics_backend.api:app --host 127.0.0.1 --port 8000
-```
-
 Now you can use standard systemctl commands to manage the service, e.g.,
 
 ```sh
