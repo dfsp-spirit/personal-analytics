@@ -198,7 +198,7 @@ Check whether running the service command line you have put into the service fil
 
 ```sh
 # Test the service (make sure to stop it with Ctrl+C when done)
-sudo -u pa-user UV_CACHE_DIR=/var/cache/pa-user/ /opt/pa-backend/.venv/bin/uvicorn personal_analytics_backend.api:app --host 127.0.0.1 --port 8000
+sudo -u pa-user UV_CACHE_DIR=/var/cache/pa-user/ uv run uvicorn personal_analytics_backend.api:app --host 127.0.0.1 --port 8000
 ```
 
 Now you can use standard systemctl commands to manage the service, e.g.,
