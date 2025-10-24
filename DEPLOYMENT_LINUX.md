@@ -158,7 +158,8 @@ You need to run this script as root, or as a user that is allowed to sudo to the
 NOTE: This script will set the database credentials you defined earlier in `/opt/pa-backend/.env`, so ensure they are strong and unique to this application. If you did not adapt them, you are now using the password that is public on the internet, in the source code of this repo, and your server may get compromized.
 
 ```sh
-sudo /opt/pa-backend/src/setup_db.sh
+sudo chmod +x /opt/pa-backend/setup_db.sh
+sudo /opt/pa-backend/setup_db.sh
 ```
 
 Now that we have the database ready, let us create a dedicated system user who will run the backend app and adapt the file system permissions accordingly.
@@ -181,7 +182,7 @@ sudo chown pa-user:pa-user /var/cache/pa-user/
 # Switch to service user and install app in the service directory
 cd /opt/pa-backend
 sudo -u pa-user UV_CACHE_DIR=/var/cache/pa-user/ uv venv   # will create a virtual environment at /opt/pa-backend/.venv
-sudo -u pa-user UV_CACHE_DIR=/var/cache/pa-user/ uv run pip install -e .   # will install into the .venv
+sudo -u pa-user UV_CACHE_DIR=/var/cache/pa-user/ uv pip install -e .   # will install into the .venv
 ```
 
 Setup a system service. E.g., for Ubuntu, copy the template service file from this repo, adapt it to your system and service user, then start it with systemctl. E.g.,
