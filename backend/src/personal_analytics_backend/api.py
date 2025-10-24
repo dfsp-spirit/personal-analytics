@@ -28,6 +28,39 @@ app.add_middleware(
     expose_headers=["X-Operation"] # custom header to tell frontend on submit if the entry was created or updated.
 )
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Global exception handler that ensures CORS headers are always set"""
+    error_id = str(uuid.uuid4())
+
+    # Log the actual error
+    logger.error(f"Unhandled exception ID {error_id}: {str(exc)}", exc_info=True)
+
+    # Determine status code based on exception type
+    status_code = 500
+    if isinstance(exc, HTTPException):
+        status_code = exc.status_code
+
+    # Create response with CORS headers
+    response = JSONResponse(
+        status_code=status_code,
+        content={
+            "detail": "Internal server error",
+            "error_id": error_id,
+            "message": "Something went wrong on our end"
+        }
+    )
+
+    # Manually add CORS headers to ensure they're present
+    response.headers["Access-Control-Allow-Origin"] = "http://localhost:3000"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Allow-Methods"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+
+    return response
+
+
+
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
@@ -225,7 +258,7 @@ def get_metrics_over_time(
 
     # Default metrics if none specified
     if metrics is None:
-        metrics = ["mood", "pain", "anxiety", "energy", "sleep_quality"]
+        metrics = ["mood", "pain", "energy", "sleep_quality", "sexual_wellbeing"]
 
     # Structure data for frontend
     result = {
@@ -253,9 +286,9 @@ def get_weekday_averages(session: Session = Depends(get_session)):
             HealthEntry.day_of_week,
             func.avg(HealthEntry.mood).label('avg_mood'),
             func.avg(HealthEntry.pain).label('avg_pain'),
-            func.avg(HealthEntry.anxiety).label('avg_anxiety'),
             func.avg(HealthEntry.energy).label('avg_energy'),
             func.avg(HealthEntry.sleep_quality).label('avg_sleep_quality'),
+            func.avg(HealthEntry.sexual_wellbeing).label('avg_sexual_wellbeing'),
             func.count(HealthEntry.id).label('entry_count')
         )
         .group_by(HealthEntry.day_of_week)
@@ -272,9 +305,9 @@ def get_weekday_averages(session: Session = Depends(get_session)):
             'day_of_week': row.day_of_week,
             'avg_mood': round(float(row.avg_mood or 0), 2),
             'avg_pain': round(float(row.avg_pain or 0), 2),
-            'avg_anxiety': round(float(row.avg_anxiety or 0), 2),
             'avg_energy': round(float(row.avg_energy or 0), 2),
             'avg_sleep_quality': round(float(row.avg_sleep_quality or 0), 2),
+            'avg_sexual_wellbeing': round(float(row.avg_sexual_wellbeing or 0), 2),
             'entry_count': row.entry_count
         })
 
@@ -288,9 +321,9 @@ def get_correlations(session: Session = Depends(get_session)):
         select(
             HealthEntry.mood,
             HealthEntry.pain,
-            HealthEntry.anxiety,
             HealthEntry.energy,
             HealthEntry.sleep_quality,
+            HealthEntry.sexual_wellbeing,
             HealthEntry.stress_level_work,
             HealthEntry.stress_level_home
         ).where(
@@ -304,7 +337,7 @@ def get_correlations(session: Session = Depends(get_session)):
 
     # Convert to lists for each metric
     metrics_data = {}
-    metric_fields = ['mood', 'pain', 'anxiety', 'energy', 'sleep_quality', 'stress_level_work', 'stress_level_home']
+    metric_fields = ['mood', 'pain', 'energy', 'sleep_quality', 'sexual_wellbeing', 'stress_level_work', 'stress_level_home']
 
     for field in metric_fields:
         metrics_data[field] = [getattr(entry, field) for entry in entries if getattr(entry, field) is not None]
@@ -336,46 +369,69 @@ def get_correlations(session: Session = Depends(get_session)):
 @app.get("/stats/lagged-correlations")
 def get_lagged_correlations(session: Session = Depends(get_session)):
     """Check if pain today predicts mood tomorrow (and other lagged relationships)"""
-
-    # Raw SQL for lagged analysis (easier with window functions)
-    query = text("""
-        WITH daily_entries AS (
+    try:
+        # Raw SQL for lagged analysis - updated to match your actual model fields
+        query = text("""
+            WITH daily_entries AS (
+                SELECT
+                    date,
+                    mood,
+                    pain,
+                    energy,
+                    sexual_wellbeing,
+                    sleep_quality,
+                    stress_level_work,
+                    stress_level_home,
+                    LAG(mood) OVER (ORDER BY date) as next_day_mood,
+                    LAG(pain) OVER (ORDER BY date) as next_day_pain,
+                    LAG(energy) OVER (ORDER BY date) as next_day_energy,
+                    LAG(sexual_wellbeing) OVER (ORDER BY date) as next_day_sexual_wellbeing,
+                    LAG(sleep_quality) OVER (ORDER BY date) as next_day_sleep_quality
+                FROM healthentry
+                WHERE mood IS NOT NULL AND pain IS NOT NULL
+                ORDER BY date
+            )
             SELECT
-                date,
-                mood,
-                pain,
-                anxiety,
-                energy,
-                LAG(mood) OVER (ORDER BY date) as next_day_mood,
-                LAG(pain) OVER (ORDER BY date) as next_day_pain,
-                LAG(anxiety) OVER (ORDER BY date) as next_day_anxiety,
-                LAG(energy) OVER (ORDER BY date) as next_day_energy
-            FROM healthentry
-            WHERE mood IS NOT NULL AND pain IS NOT NULL
-            ORDER BY date
+                COUNT(*) as pair_count,
+                CORR(pain, next_day_mood) as pain_vs_next_mood,
+                CORR(mood, next_day_pain) as mood_vs_next_pain,
+                CORR(sexual_wellbeing, next_day_mood) as sexual_wellbeing_vs_next_mood,
+                CORR(pain, next_day_energy) as pain_vs_next_energy,
+                CORR(sleep_quality, next_day_mood) as sleep_vs_next_mood,
+                CORR(stress_level_work, next_day_mood) as work_stress_vs_next_mood,
+                CORR(stress_level_home, next_day_mood) as home_stress_vs_next_mood
+            FROM daily_entries
+            WHERE next_day_mood IS NOT NULL
+        """)
+
+        result = session.exec(query).first()
+
+        if not result or result.pair_count < 5:  # Need minimum data points
+            return {"error": "Insufficient data for lagged correlation analysis"}
+
+        return {
+            'pair_count': result.pair_count,
+            'pain_today_vs_mood_tomorrow': round(float(result.pain_vs_next_mood or 0), 3),
+            'mood_today_vs_pain_tomorrow': round(float(result.mood_vs_next_pain or 0), 3),
+            'sexual_wellbeing_today_vs_mood_tomorrow': round(float(result.sexual_wellbeing_vs_next_mood or 0), 3),
+            'pain_today_vs_energy_tomorrow': round(float(result.pain_vs_next_energy or 0), 3),
+            'sleep_quality_today_vs_mood_tomorrow': round(float(result.sleep_vs_next_mood or 0), 3),
+            'work_stress_today_vs_mood_tomorrow': round(float(result.work_stress_vs_next_mood or 0), 3),
+            'home_stress_today_vs_mood_tomorrow': round(float(result.home_stress_vs_next_mood or 0), 3),
+        }
+
+    except SQLAlchemyError as e:
+        logger.error(f"Database error in lagged-correlations: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Database error occurred while calculating correlations"
         )
-        SELECT
-            COUNT(*) as pair_count,
-            CORR(pain, next_day_mood) as pain_vs_next_mood,
-            CORR(mood, next_day_pain) as mood_vs_next_pain,
-            CORR(anxiety, next_day_mood) as anxiety_vs_next_mood,
-            CORR(pain, next_day_anxiety) as pain_vs_next_anxiety
-        FROM daily_entries
-        WHERE next_day_mood IS NOT NULL
-    """)
-
-    result = session.exec(query).first()
-
-    if not result or result.pair_count < 5:  # Need minimum data points
-        return {"error": "Insufficient data for lagged correlation analysis"}
-
-    return {
-        'pair_count': result.pair_count,
-        'pain_today_vs_mood_tomorrow': round(float(result.pain_vs_next_mood or 0), 3),
-        'mood_today_vs_pain_tomorrow': round(float(result.mood_vs_next_pain or 0), 3),
-        'anxiety_today_vs_mood_tomorrow': round(float(result.anxiety_vs_next_mood or 0), 3),
-        'pain_today_vs_anxiety_tomorrow': round(float(result.pain_vs_next_anxiety or 0), 3)
-    }
+    except Exception as e:
+        logger.error(f"Unexpected error in lagged-correlations: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="An unexpected error occurred"
+        )
 
 @app.get("/stats/summary")
 def get_summary_stats(session: Session = Depends(get_session)):
@@ -387,7 +443,9 @@ def get_summary_stats(session: Session = Depends(get_session)):
             func.max(HealthEntry.date).label('last_entry'),
             func.avg(HealthEntry.mood).label('avg_mood'),
             func.avg(HealthEntry.pain).label('avg_pain'),
-            func.avg(HealthEntry.anxiety).label('avg_anxiety')
+            func.avg(HealthEntry.energy).label('avg_energy'),
+            func.avg(HealthEntry.sexual_wellbeing).label('avg_sexual_wellbeing'),
+            func.avg(HealthEntry.step_count).label('avg_step_count')
         )
     ).first()
 
@@ -434,7 +492,8 @@ def get_summary_stats(session: Session = Depends(get_session)):
         'averages': {
             'mood': round(float(result.avg_mood or 0), 2),
             'pain': round(float(result.avg_pain or 0), 2),
-            'anxiety': round(float(result.avg_anxiety or 0), 2)
+            'energy': round(float(result.avg_energy or 0), 2),
+            'sexual_wellbeing': round(float(result.avg_sexual_wellbeing or 0), 2)
         },
         'current_streak': {
             'length': streak_result.streak_length if streak_result else 0,
@@ -463,11 +522,11 @@ def export_all_data_csv(session: Session = Depends(get_session)):
     # Define CSV headers - include all fields from your model
     headers = [
         'id', 'date', 'timestamp', 'day_of_week', 'day_name', 'is_weekend',
-        'mood', 'pain', 'anxiety', 'energy',
+        'mood', 'pain', 'energy',
         'allergy_state', 'allergy_medication',
-        'had_sex', 'sleep_quality',
+        'had_sex', 'sexual_wellbeing', 'sleep_quality',
         'stress_level_work', 'stress_level_home',
-        'social_support', 'physical_activity', 'weather_enjoyment',
+        'physical_activity', 'step_count', 'weather_enjoyment',
         'daily_comments'
     ]
 
@@ -495,15 +554,14 @@ def export_all_data_csv(session: Session = Depends(get_session)):
             entry.is_weekend if hasattr(entry, 'is_weekend') else '',  # Use computed property
             entry.mood,
             entry.pain,
-            entry.anxiety,
             entry.energy,
             entry.allergy_state,
             entry.allergy_medication,
             entry.had_sex,
+            entry.sexual_wellbeing,
             entry.sleep_quality,
             entry.stress_level_work,
             entry.stress_level_home,
-            entry.social_support,
             entry.physical_activity,
             entry.weather_enjoyment,
             entry.daily_comments or ''  # Handle None values

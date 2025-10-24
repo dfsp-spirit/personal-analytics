@@ -37,6 +37,20 @@
             align-items: center;
             gap: 5px;
         }
+        .lagged-results p {
+            margin: 8px 0;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .correlation-value.positive {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .correlation-value.negative {
+            color: #dc3545;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -67,16 +81,16 @@
                     <label for="pain-check">Pain</label>
                 </div>
                 <div class="metric-checkbox">
-                    <input type="checkbox" id="anxiety-check" checked>
-                    <label for="anxiety-check">Anxiety</label>
+                    <input type="checkbox" id="sexual_wellbeing-check" checked>
+                    <label for="sexual_wellbeing-check">Sexual Wellbeing</label>
                 </div>
                 <div class="metric-checkbox">
                     <input type="checkbox" id="energy-check">
                     <label for="energy-check">Energy</label>
                 </div>
                 <div class="metric-checkbox">
-                    <input type="checkbox" id="sleep-check">
-                    <label for="sleep-check">Sleep Quality</label>
+                    <input type="checkbox" id="sleep_quality-check">
+                    <label for="sleep_quality-check">Sleep Quality</label>
                 </div>
             </div>
 
@@ -86,8 +100,6 @@
         <div class="chart-container">
             <canvas id="metricsChart"></canvas>
         </div>
-
-
 
         <!-- Summary Statistics -->
         <div class="stats-section">
@@ -150,19 +162,20 @@
 
     </div>
 
-
     <script src="settings.js"></script>
     <script src="form-config.js"></script>
     <script>
         let chart = null;
 
-        // Available metrics with colors
+        // Available metrics with colors - updated to match backend
         const metricConfig = {
             mood: { label: 'Mood', color: 'rgb(75, 192, 192)', borderDash: [] },
             pain: { label: 'Pain', color: 'rgb(255, 99, 132)', borderDash: [] },
-            anxiety: { label: 'Anxiety', color: 'rgb(255, 159, 64)', borderDash: [] },
+            sexual_wellbeing: { label: 'Sexual Wellbeing', color: 'rgb(255, 159, 64)', borderDash: [] },
             energy: { label: 'Energy', color: 'rgb(54, 162, 235)', borderDash: [5, 5] },
-            sleep_quality: { label: 'Sleep Quality', color: 'rgb(153, 102, 255)', borderDash: [10, 5] }
+            sleep_quality: { label: 'Sleep Quality', color: 'rgb(153, 102, 255)', borderDash: [10, 5] },
+            stress_level_work: { label: 'Work Stress', color: 'rgb(201, 203, 207)', borderDash: [2, 2] },
+            stress_level_home: { label: 'Home Stress', color: 'rgb(255, 205, 86)', borderDash: [2, 2] }
         };
 
         async function loadChartData(days = 30) {
@@ -301,145 +314,156 @@
         }
 
         async function loadSummaryStats() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/stats/summary`);
-        const data = await response.json();
-        displaySummaryStats(data);
-    } catch (error) {
-        console.error('Error loading summary stats:', error);
-    }
-}
-
-function displaySummaryStats(data) {
-    const container = document.getElementById('summary-stats');
-
-    container.innerHTML = `
-        <div class="stat-card">
-            <h3>${data.total_entries}</h3>
-            <p>Total Entries</p>
-        </div>
-        <div class="stat-card">
-            <h3>${data.averages.mood}</h3>
-            <p>Average Mood</p>
-        </div>
-        <div class="stat-card">
-            <h3>${data.averages.pain}</h3>
-            <p>Average Pain</p>
-        </div>
-        <div class="stat-card">
-            <h3>${data.current_streak ? data.current_streak.length : 0}</h3>
-            <p>Current Streak</p>
-        </div>
-    `;
-}
-
-async function loadWeekdayAverages() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/stats/weekday-averages`);
-        const data = await response.json();
-        createWeekdayChart(data);
-    } catch (error) {
-        console.error('Error loading weekday averages:', error);
-    }
-}
-
-function createWeekdayChart(data) {
-    const ctx = document.getElementById('weekdayChart').getContext('2d');
-
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: data.map(d => d.weekday),
-            datasets: [
-                {
-                    label: 'Average Mood',
-                    data: data.map(d => d.avg_mood),
-                    backgroundColor: 'rgba(75, 192, 192, 0.6)'
-                },
-                {
-                    label: 'Average Pain',
-                    data: data.map(d => d.avg_pain),
-                    backgroundColor: 'rgba(255, 99, 132, 0.6)'
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 10
-                }
+            try {
+                const response = await fetch(`${API_BASE_URL}/stats/summary`);
+                const data = await response.json();
+                displaySummaryStats(data);
+            } catch (error) {
+                console.error('Error loading summary stats:', error);
             }
         }
-    });
-}
 
-async function loadCorrelations() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/stats/correlations`);
-        const data = await response.json();
-        displayCorrelations(data);
-    } catch (error) {
-        console.error('Error loading correlations:', error);
-    }
-}
+        function displaySummaryStats(data) {
+            const container = document.getElementById('summary-stats');
 
-function displayCorrelations(correlations) {
-    const container = document.getElementById('correlation-matrix');
+            container.innerHTML = `
+                <div class="stat-card">
+                    <h3>${data.total_entries}</h3>
+                    <p>Total Entries</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${data.averages.mood}</h3>
+                    <p>Average Mood</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${data.averages.pain}</h3>
+                    <p>Average Pain</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${data.averages.energy || 'N/A'}</h3>
+                    <p>Average Energy</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${data.current_streak ? data.current_streak.length : 0}</h3>
+                    <p>Current Streak</p>
+                </div>
+            `;
+        }
 
-    // Show top 10 strongest correlations
-    const topCorrelations = correlations.slice(0, 10);
+        async function loadWeekdayAverages() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/stats/weekday-averages`);
+                const data = await response.json();
+                createWeekdayChart(data);
+            } catch (error) {
+                console.error('Error loading weekday averages:', error);
+            }
+        }
 
-    container.innerHTML = topCorrelations.map(corr => `
-        <div class="correlation-item">
-            <span class="metric-pair">${corr.metric1} ↔ ${corr.metric2}</span>
-            <span class="correlation-value ${corr.correlation > 0 ? 'positive' : 'negative'}">
-                ${corr.correlation}
-            </span>
-            <small>(${corr.sample_size} samples)</small>
-        </div>
-    `).join('');
-}
+        function createWeekdayChart(data) {
+            const ctx = document.getElementById('weekdayChart').getContext('2d');
 
-async function loadLaggedAnalysis() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/stats/lagged-correlations`);
-        const data = await response.json();
-        displayLaggedAnalysis(data);
-    } catch (error) {
-        console.error('Error loading lagged analysis:', error);
-    }
-}
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(d => d.weekday),
+                    datasets: [
+                        {
+                            label: 'Average Mood',
+                            data: data.map(d => d.avg_mood),
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)'
+                        },
+                        {
+                            label: 'Average Pain',
+                            data: data.map(d => d.avg_pain),
+                            backgroundColor: 'rgba(255, 99, 132, 0.6)'
+                        },
+                        {
+                            label: 'Average Energy',
+                            data: data.map(d => d.avg_energy),
+                            backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10
+                        }
+                    }
+                }
+            });
+        }
 
-function displayLaggedAnalysis(data) {
-    const container = document.getElementById('lagged-analysis');
+        async function loadCorrelations() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/stats/correlations`);
+                const data = await response.json();
+                displayCorrelations(data);
+            } catch (error) {
+                console.error('Error loading correlations:', error);
+            }
+        }
 
-    if (data.error) {
-        container.innerHTML = `<p>${data.error}</p>`;
-        return;
-    }
+        function displayCorrelations(correlations) {
+            const container = document.getElementById('correlation-matrix');
 
-    container.innerHTML = `
-        <div class="lagged-results">
-            <p><strong>Pain today vs Mood tomorrow:</strong> ${data.pain_today_vs_mood_tomorrow}</p>
-            <p><strong>Mood today vs Pain tomorrow:</strong> ${data.mood_today_vs_pain_tomorrow}</p>
-            <p><strong>Anxiety today vs Mood tomorrow:</strong> ${data.anxiety_today_vs_mood_tomorrow}</p>
-            <p><strong>Pain today vs Anxiety tomorrow:</strong> ${data.pain_today_vs_anxiety_tomorrow}</p>
-            <p><em>Based on ${data.pair_count} day pairs</em></p>
-        </div>
-    `;
-}
+            // Show top 10 strongest correlations
+            const topCorrelations = correlations.slice(0, 10);
 
-// Update your existing load function to include all analytics
-async function loadAllAnalytics() {
-    await updateChart(); // Your existing function
-    await loadSummaryStats();
-    await loadWeekdayAverages();
-    await loadCorrelations();
-    await loadLaggedAnalysis();
-}
+            container.innerHTML = topCorrelations.map(corr => `
+                <div class="correlation-item">
+                    <span class="metric-pair">${corr.metric1} ↔ ${corr.metric2}</span>
+                    <span class="correlation-value ${corr.correlation > 0 ? 'positive' : 'negative'}">
+                        ${corr.correlation}
+                    </span>
+                    <small>(${corr.sample_size} samples)</small>
+                </div>
+            `).join('');
+        }
 
+        async function loadLaggedAnalysis() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/stats/lagged-correlations`);
+                const data = await response.json();
+                displayLaggedAnalysis(data);
+            } catch (error) {
+                console.error('Error loading lagged analysis:', error);
+            }
+        }
+
+        function displayLaggedAnalysis(data) {
+            const container = document.getElementById('lagged-analysis');
+
+            if (data.error) {
+                container.innerHTML = `<p>${data.error}</p>`;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="lagged-results">
+                    <p><strong>Pain today vs Mood tomorrow:</strong> ${data.pain_today_vs_mood_tomorrow}</p>
+                    <p><strong>Mood today vs Pain tomorrow:</strong> ${data.mood_today_vs_pain_tomorrow}</p>
+                    <p><strong>Sexual Wellbeing today vs Mood tomorrow:</strong> ${data.sexual_wellbeing_today_vs_mood_tomorrow}</p>
+                    <p><strong>Pain today vs Energy tomorrow:</strong> ${data.pain_today_vs_energy_tomorrow}</p>
+                    <p><strong>Sleep Quality today vs Mood tomorrow:</strong> ${data.sleep_quality_today_vs_mood_tomorrow}</p>
+                    <p><strong>Work Stress today vs Mood tomorrow:</strong> ${data.work_stress_today_vs_mood_tomorrow}</p>
+                    <p><strong>Home Stress today vs Mood tomorrow:</strong> ${data.home_stress_today_vs_mood_tomorrow}</p>
+                    <p><em>Based on ${data.pair_count} day pairs</em></p>
+                </div>
+            `;
+        }
+
+        // Update your existing load function to include all analytics
+        async function loadAllAnalytics() {
+            await updateChart(); // Your existing function
+            await loadSummaryStats();
+            await loadWeekdayAverages();
+            await loadCorrelations();
+            await loadLaggedAnalysis();
+        }
 
         // Event listeners
         document.getElementById('update-chart').addEventListener('click', updateChart);
@@ -448,102 +472,100 @@ async function loadAllAnalytics() {
         // Initialize chart on page load
         window.addEventListener('load', loadAllAnalytics);
 
-    // Data download functionality
-document.getElementById('download-csv').addEventListener('click', async function() {
-    await downloadData('csv');
-});
+        // Data download functionality
+        document.getElementById('download-csv').addEventListener('click', async function() {
+            await downloadData('csv');
+        });
 
-document.getElementById('download-json').addEventListener('click', async function() {
-    await downloadData('json');
-});
+        document.getElementById('download-json').addEventListener('click', async function() {
+            await downloadData('json');
+        });
 
-async function downloadData(format) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/export/${format}`);
+        async function downloadData(format) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/export/${format}`);
 
-        if (!response.ok) {
-            throw new Error(`Failed to download ${format.toUpperCase()}`);
-        }
+                if (!response.ok) {
+                    throw new Error(`Failed to download ${format.toUpperCase()}`);
+                }
 
-        // Create download link
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
+                // Create download link
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
 
-        // Get filename from Content-Disposition header or generate one
-        const contentDisposition = response.headers.get('Content-Disposition');
-        let filename = `health_data_export.${format}`;
+                // Get filename from Content-Disposition header or generate one
+                const contentDisposition = response.headers.get('Content-Disposition');
+                let filename = `health_data_export.${format}`;
 
-        if (contentDisposition) {
-            const filenameMatch = contentDisposition.match(/filename="(.+)"/);
-            if (filenameMatch) {
-                filename = filenameMatch[1];
+                if (contentDisposition) {
+                    const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                    if (filenameMatch) {
+                        filename = filenameMatch[1];
+                    }
+                }
+
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+
+            } catch (error) {
+                console.error(`Error downloading ${format.toUpperCase()}:`, error);
+                alert(`Failed to download ${format.toUpperCase()} file: ${error.message}`);
             }
         }
 
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+        // Data dictionary generation
+        function generateDataDictionary() {
+            const dictionary = {};
 
-    } catch (error) {
-        console.error(`Error downloading ${format.toUpperCase()}:`, error);
-        alert(`Failed to download ${format.toUpperCase()} file: ${error.message}`);
-    }
-}
+            Object.entries(FORM_CONFIG).forEach(([fieldName, config]) => {
+                dictionary[fieldName] = {
+                    label: config.label,
+                    type: config.type,
+                    description: config.scaleLabels ? config.scaleLabels.join(' | ') : null
+                };
 
-// Data dictionary generation
-function generateDataDictionary() {
-    const dictionary = {};
+                // Add value mappings for radio/select fields
+                if (config.options) {
+                    dictionary[fieldName].value_mappings = config.options;
+                }
 
-    Object.entries(FORM_CONFIG).forEach(([fieldName, config]) => {
-        dictionary[fieldName] = {
-            label: config.label,
-            type: config.type,
-            description: config.scaleLabels ? config.scaleLabels.join(' | ') : null
-        };
+                // Add encoding info for radio fields with encoding
+                if (config.encoding) {
+                    dictionary[fieldName].encoding = config.encoding;
+                }
 
-        // Add value mappings for radio/select fields
-        if (config.options) {
-            dictionary[fieldName].value_mappings = config.options;
+                // Add checkbox group structure
+                if (config.type === 'checkbox-group' && config.categories) {
+                    dictionary[fieldName].categories = config.categories;
+                }
+            });
+            console.log("Generated Data Dictionary:", dictionary);
+            return dictionary;
         }
 
-        // Add encoding info for radio fields with encoding
-        if (config.encoding) {
-            dictionary[fieldName].encoding = config.encoding;
-        }
+        // Add event listener for the dictionary download
+        document.getElementById('download-dictionary').addEventListener('click', function() {
+            console.log("Generating data dictionary...");
+            const dictionary = generateDataDictionary();
+            const dataStr = JSON.stringify(dictionary, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
 
-        // Add checkbox group structure
-        if (config.type === 'checkbox-group' && config.categories) {
-            dictionary[fieldName].categories = config.categories;
-        }
-    });
-    console.log("Generated Data Dictionary:", dictionary);
-    return dictionary;
-}
+            console.log("Dictionary:", dictionary);
 
-// Add event listener for the dictionary download
-document.getElementById('download-dictionary').addEventListener('click', function() {
-    console.log("Generating data dictionary...");
-    const dictionary = generateDataDictionary();
-    const dataStr = JSON.stringify(dictionary, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-
-    console.log("Dictionary:", dictionary);
-
-    const url = window.URL.createObjectURL(dataBlob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'health_data_dictionary.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-});
-
-
+            const url = window.URL.createObjectURL(dataBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'health_data_dictionary.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        });
     </script>
 </body>
 </html>

@@ -47,7 +47,9 @@ fi
 echo "Dropping database '$DATABASE_NAME'..."
 sudo -u postgres psql << EOF
 DROP DATABASE IF EXISTS $DATABASE_NAME;
+DROP USER IF EXISTS $DATABASE_USER;
 \echo "Database '$DATABASE_NAME' dropped successfully"
+\echo "User '$DATABASE_USER' dropped successfully"
 EOF
 
 echo "Database drop complete!"

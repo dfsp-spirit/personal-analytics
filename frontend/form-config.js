@@ -24,16 +24,6 @@ const FORM_CONFIG = {
         default: 0,
         parse: (value) => parseInt(value)
     },
-    anxiety: {
-        type: 'slider',
-        label: 'Anxiety level today?',
-        min: 0,
-        max: 10,
-        scaleLabels: ['0 - None', '10 - Extreme'],
-        required: true,
-        default: 0,
-        parse: (value) => parseInt(value)
-    },
     energy: {
         type: 'slider',
         label: 'Energy level today?',
@@ -83,6 +73,16 @@ const FORM_CONFIG = {
         default: 0,
         parse: (value) => parseInt(value)
     },
+    sexual_wellbeing: {
+        type: 'slider',
+        label: 'Sexual Wellbeing (0-10)',
+        min: 0,
+        max: 10,
+        scaleLabels: ['0 - Very poor', '10 - Excellent'],
+        required: true,
+        default: 5,
+        parse: (value) => parseInt(value)
+    },
     sleep_quality: {
         type: 'slider',
         label: 'Sleep Quality (0-10)',
@@ -113,16 +113,6 @@ const FORM_CONFIG = {
         default: 0,
         parse: (value) => parseInt(value)
     },
-    social_support: {
-        type: 'slider',
-        label: 'Quality of social interactions and support?',
-        min: 0,
-        max: 10,
-        scaleLabels: ['0 - Very poor', '10 - Excellent'],
-        required: true,
-        default: 5,
-        parse: (value) => parseInt(value)
-    },
     physical_activity: {
         type: 'select',
         label: 'Physical activity level?',
@@ -131,6 +121,17 @@ const FORM_CONFIG = {
         },
         required: true,
         default: '0',
+        parse: (value) => parseInt(value)
+    },
+    step_count: {
+        type: 'number-slider',
+        label: 'Step Count',
+        min: 0,
+        max: 10000,
+        step: 100,
+        scaleLabels: ['0', '5000', '10000'],
+        required: false,
+        default: 5000,
         parse: (value) => parseInt(value)
     },
     weather_enjoyment: {
@@ -293,17 +294,6 @@ const FORM_CONFIG = {
         default: '',
         parse: (value) => value.trim() || null
     },
-    steps: {
-    type: 'number-slider',
-    label: 'Step Count',
-    min: 0,
-    max: 10000,
-    step: 100,
-    scaleLabels: ['0', '5000', '10000'],
-    required: false,
-    default: 5000,
-    parse: (value) => parseInt(value)
-},
 };
 
 // Helper function to flatten all checkbox options

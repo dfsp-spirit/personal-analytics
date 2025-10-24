@@ -85,7 +85,7 @@ server {
         auth_basic "PersonalAnalytics";
         auth_basic_user_file /etc/nginx/.htpasswd;
         try_files $uri $uri/ =404;
-        # Security recommendations for /pa/ location:
+        # Security recommendations specific to the /pa/ location:
         # - Rate limiting (limit_req with limit_req_zone in http context)
         # - Security headers:
         #   add_header X-Frame-Options "SAMEORIGIN" always;
