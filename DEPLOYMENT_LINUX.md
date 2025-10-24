@@ -17,7 +17,7 @@ This file gives an example of how to deploy the app (frontend, backend, database
 
 ## Deployment overview
 
-We are going for direct deployment on the machine without Docker. This will work on bare meta, a VM, or a virtual server.
+We are going for direct deployment on the machine. This will work on bare meta, a VM, or a virtual server.
 
 We will be running everything on this machine:
 
