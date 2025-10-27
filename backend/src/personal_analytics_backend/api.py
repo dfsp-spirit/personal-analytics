@@ -30,7 +30,7 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info(f"Backend starting with allowed origins: {settings.allowed_origins}")
     if settings.debug:
-        print(f"Debug mode enabled - Allowed origins: {settings.allowed_origins}")
+        print(f"Debug mode enabled.")
     yield
     # Shutdown
     logger.info("Backend shutting down")
