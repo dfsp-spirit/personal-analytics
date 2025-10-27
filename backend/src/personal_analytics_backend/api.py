@@ -47,9 +47,6 @@ app.add_middleware(
     expose_headers=["X-Operation"] # custom header to tell frontend on submit if the entry was created or updated.
 )
 
-import logging
-
-
 
 
 @app.exception_handler(Exception)
@@ -108,6 +105,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 @app.on_event("startup")
 def on_startup():
+    logger.info("Running on_startup tasks...")
     create_db_and_tables()
 
 
