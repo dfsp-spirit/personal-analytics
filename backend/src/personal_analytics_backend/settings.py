@@ -9,7 +9,7 @@ load_dotenv()   # load .env file in working directory if it exists
 class PaBackendSettings:
     def __init__(self):
         # Backend-specific settings
-        self.cache_timeout = 300
+        self.debug = True if os.getenv("PA_DEBUG", "false").lower() == "true" else False
 
     # Environment-dependent settings as properties
     @property

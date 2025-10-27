@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Request, status, Response, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from fastapi.exceptions import RequestValidationError
@@ -14,11 +15,28 @@ from fastapi.responses import StreamingResponse
 from sqlmodel import Session, select
 from urllib.parse import urlparse
 
+from .logging_config import setup_logging
+setup_logging()
+logger = logging.getLogger(__name__)
+
 from . settings import settings
 from .models import HealthEntry, HealthEntryCreate, HealthEntryRead, HealthEntryUpdate
 from .database import get_session, create_db_and_tables
 
-app = FastAPI(title="Personal Analytics API", version="0.1.0")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    logger.info(f"Backend starting with allowed origins: {settings.allowed_origins}")
+    if settings.debug:
+        print(f"Debug mode enabled - Allowed origins: {settings.allowed_origins}")
+    yield
+    # Shutdown
+    logger.info("Backend shutting down")
+
+
+app = FastAPI(title="Personal Analytics API", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -28,6 +46,11 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["X-Operation"] # custom header to tell frontend on submit if the entry was created or updated.
 )
+
+import logging
+
+
+
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
