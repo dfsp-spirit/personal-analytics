@@ -31,6 +31,10 @@ async def lifespan(app: FastAPI):
     logger.info(f"Backend starting with allowed origins: {settings.allowed_origins}")
     if settings.debug:
         print(f"Debug mode enabled.")
+
+    logger.info("Running on_startup tasks...")
+    create_db_and_tables()
+
     yield
     # Shutdown
     logger.info("Backend shutting down")
@@ -100,13 +104,6 @@ async def global_exception_handler(request: Request, exc: Exception):
         response.headers["Access-Control-Expose-Headers"] = "X-Operation"
 
     return response
-
-
-
-@app.on_event("startup")
-def on_startup():
-    logger.info("Running on_startup tasks...")
-    create_db_and_tables()
 
 
 # Set up logging
