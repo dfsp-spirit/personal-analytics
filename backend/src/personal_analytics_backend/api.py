@@ -106,10 +106,6 @@ async def global_exception_handler(request: Request, exc: Exception):
     return response
 
 
-# Set up logging
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-
 # Add this exception handler for request validation errors
 @app.exception_handler(RequestValidationError)
 async def request_validation_exception_handler(request: Request, exc: RequestValidationError):
