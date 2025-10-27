@@ -11,9 +11,10 @@ import csv
 import json
 import io
 from fastapi.responses import StreamingResponse
-
 from sqlmodel import Session, select
+from urllib.parse import urlparse
 
+from . settings import settings
 from .models import HealthEntry, HealthEntryCreate, HealthEntryRead, HealthEntryUpdate
 from .database import get_session, create_db_and_tables
 
@@ -21,7 +22,7 @@ app = FastAPI(title="Personal Analytics API", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=settings.allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -30,7 +31,13 @@ app.add_middleware(
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    """Global exception handler that ensures CORS headers are always set"""
+    """
+    Global exception handler that ensures CORS headers are always set,
+    even in case of exceptions.
+    Otherwise, an internal server error may appear as a CORS error in the
+    browser, which is misleading during development.
+    This also creates a unique error ID for tracking and systematic logging.
+    """
     error_id = str(uuid.uuid4())
 
     # Log the actual error
@@ -51,11 +58,26 @@ async def global_exception_handler(request: Request, exc: Exception):
         }
     )
 
-    # Manually add CORS headers to ensure they're present
-    response.headers["Access-Control-Allow-Origin"] = "http://localhost:3000"
-    response.headers["Access-Control-Allow-Credentials"] = "true"
-    response.headers["Access-Control-Allow-Methods"] = "*"
-    response.headers["Access-Control-Allow-Headers"] = "*"
+    # Get the origin from the request
+    origin = request.headers.get("origin")
+
+    def is_localhost(origin: str) -> bool:
+        """Check if the origin corresponds to localhost."""
+        if not origin:
+            return False
+        try:
+            parsed = urlparse(origin)
+            return parsed.hostname in ["localhost", "127.0.0.1", "::1"]
+        except:
+            return False
+
+    # Check if the origin is in our configured allowed origins
+    if origin in settings.allowed_origins or is_localhost(origin):
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Methods"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        response.headers["Access-Control-Expose-Headers"] = "X-Operation"
 
     return response
 
@@ -140,7 +162,8 @@ def submit_entry(entry: HealthEntryCreate, session: Session = Depends(get_sessio
 
     # Calculate day_of_week from the date (Monday=0, Sunday=6)
     date_obj = datetime.strptime(target_date, "%Y-%m-%d").date()
-    entry.day_of_week = date_obj.weekday()  # Auto-populate the day_of_week field
+    computed_day_of_week = date_obj.weekday()  # Store in variable
+    entry.day_of_week = computed_day_of_week
 
     existing_entry = session.exec(
         select(HealthEntry).where(HealthEntry.date == target_date)  # ← Changed from today to target_date
@@ -151,6 +174,8 @@ def submit_entry(entry: HealthEntryCreate, session: Session = Depends(get_sessio
         update_data = entry.dict(exclude_unset=True, exclude={'date'})  # Critical: exclude date
         for field, value in update_data.items():
             setattr(existing_entry, field, value)
+
+        existing_entry.day_of_week = computed_day_of_week
 
         session.add(existing_entry)
         session.commit()

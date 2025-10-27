@@ -18,7 +18,7 @@ class HealthEntryBase(SQLModel):
     # Core metrics
     mood: int = Field(ge=0, le=10)
     pain: int = Field(ge=0, le=10)
-    energy: Optional[int] = Field(ge=0, le=10, default=None)
+    energy: int = Field(ge=0, le=10, default=None)
 
     # Allergy & Medication
     allergy_state: int = Field(ge=0, le=2)
@@ -34,9 +34,9 @@ class HealthEntryBase(SQLModel):
     stress_level_home: int = Field(ge=0, le=10)
 
     # Optional metrics
-    physical_activity: Optional[int] = Field(ge=0, le=3, default=None)
-    step_count: Optional[int] = Field(ge=0, le=10000, default=None)
-    weather_enjoyment: Optional[int] = Field(ge=0, le=10, default=None)
+    physical_activity: int = Field(ge=0, le=3, default=None)
+    step_count: int = Field(ge=0, le=10000, default=None)
+    weather_enjoyment: int = Field(ge=0, le=10, default=None)
 
     # JSONB for flexible activity tracking
     daily_activities: Optional[Dict[str, Any]] = Field(
@@ -64,7 +64,8 @@ class HealthEntry(HealthEntryBase, table=True):
 
 # For API - SQLModel handles serialization automatically
 class HealthEntryCreate(HealthEntryBase):
-    pass
+    # Only include fields that the frontend should send
+    day_of_week: Optional[int] = None  # Will be computed from date
 
 
 class HealthEntryRead(HealthEntryBase):

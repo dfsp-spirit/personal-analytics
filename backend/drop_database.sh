@@ -19,24 +19,24 @@ if [ ! -f ".env" ]; then
     exit 1
 fi
 
-source ".env"   # Loads environment variables DATABASE_NAME, DATABASE_USER, DATABASE_PASSWORD
+source ".env"   # Loads environment variables PA_DATABASE_NAME, PA_DATABASE_USER, PA_DATABASE_PASSWORD
 
 # After sourcing the .env file, validate required variables
-if [ -z "$DATABASE_NAME" ] || [ -z "$DATABASE_USER" ] || [ -z "$DATABASE_PASSWORD" ]; then
+if [ -z "$PA_DATABASE_NAME" ] || [ -z "$PA_DATABASE_USER" ] || [ -z "$PA_DATABASE_PASSWORD" ]; then
     echo "ERROR: Missing required database configuration in '.env' file."
-    echo "Please ensure DATABASE_NAME, DATABASE_USER, and DATABASE_PASSWORD are set."
+    echo "Please ensure PA_DATABASE_NAME, PA_DATABASE_USER, and PA_DATABASE_PASSWORD are set."
     exit 1
 fi
 
 echo "Loaded env vars from '.env' file:"
-echo " DATABASE_NAME='$DATABASE_NAME'"
-echo " DATABASE_USER='$DATABASE_USER'"
-echo " DATABASE_PASSWORD='(hidden)'"
+echo " PA_DATABASE_NAME='$PA_DATABASE_NAME'"
+echo " PA_DATABASE_USER='$PA_DATABASE_USER'"
+echo " PA_DATABASE_PASSWORD='(hidden)'"
 ## End of env file handling
 
 echo "Dropping database..."
 
-echo "WARNING: This will permanently delete the postgresql database '$DATABASE_NAME' on localhost and all its data!"
+echo "WARNING: This will permanently delete the postgresql database '$PA_DATABASE_NAME' on localhost and all its data!"
 read -p "Are you sure you want to continue? (y/N): " confirm
 
 if [[ $confirm != [yY] && $confirm != [yY][eE][sS] ]]; then
@@ -44,12 +44,12 @@ if [[ $confirm != [yY] && $confirm != [yY][eE][sS] ]]; then
     exit 0
 fi
 
-echo "Dropping database '$DATABASE_NAME'..."
+echo "Dropping database '$PA_DATABASE_NAME'..."
 sudo -u postgres psql << EOF
-DROP DATABASE IF EXISTS $DATABASE_NAME;
-DROP USER IF EXISTS $DATABASE_USER;
-\echo "Database '$DATABASE_NAME' dropped successfully"
-\echo "User '$DATABASE_USER' dropped successfully"
+DROP DATABASE IF EXISTS $PA_DATABASE_NAME;
+DROP USER IF EXISTS $PA_DATABASE_USER;
+\echo "Database '$PA_DATABASE_NAME' dropped successfully"
+\echo "User '$PA_DATABASE_USER' dropped successfully"
 EOF
 
 echo "Database drop complete!"
