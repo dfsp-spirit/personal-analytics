@@ -33,6 +33,8 @@
     </div>
 
     <script src="settings.js"></script>
+    <script src="user-manager.js"></script>
+    <script src="common.js"></script>
     <script src="form-config.js"></script>
     <script src="form-generator.js"></script>
     <script>
@@ -198,7 +200,7 @@ form.addEventListener('submit', async function(e) {
         submitBtn.textContent = 'Saving...';
         submitBtn.disabled = true;
 
-        const response = await fetch(`${API_BASE_URL}/entries/`, {
+        const response = await fetch(`${SETTINGS.API_BASE_URL}/entries/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -225,7 +227,7 @@ form.addEventListener('submit', async function(e) {
         updateEntryStatus(true); // Now an entry exists for this date
 
     } catch (error) {
-        console.error('Error saving data to backend at API BASE URL ' + `${API_BASE_URL}` + ' :', error);
+        console.error('Error saving data to backend at API BASE URL ' + `${SETTINGS.API_BASE_URL}` + ' :', error);
         console.log('Falling back to localStorage...');
         saveToStorage(formData);
         alert('Saved to local storage (backend API error: ' + error.message + ')');
@@ -241,7 +243,7 @@ form.addEventListener('submit', async function(e) {
 // Update the loadEntryForDate function to set the status
 async function loadEntryForDate(date) {
     try {
-        const response = await fetch(`${API_BASE_URL}/entries/?start_date=${date}&end_date=${date}`);
+        const response = await fetch(`${SETTINGS.API_BASE_URL}/entries/?start_date=${date}&end_date=${date}`);
 
         if (response.ok) {
             const entries = await response.json();
@@ -260,7 +262,7 @@ async function loadEntryForDate(date) {
             }
         }
     } catch (error) {
-        console.log('API unavailable at API BASE URL ' + `${API_BASE_URL}` + ', checking localStorage...');
+        console.log('API unavailable at API BASE URL ' + `${SETTINGS.API_BASE_URL}` + ', checking localStorage...');
         // Fallback to localStorage
         const existingData = JSON.parse(localStorage.getItem('healthData') || '[]');
         const existingEntry = existingData.find(entry => entry.date === date);
@@ -305,5 +307,12 @@ async function loadEntryForDate(date) {
         }
 
     </script>
+    <footer class="app-footer">
+        <div class="footer-content">
+            <span>User ID: <span id="footer-userid">loading...</span></span>
+            <span>Backend URL: <span id="footer-backend-url">loading...</span></span>
+        </div>
+    </footer>
+
 </body>
 </html>

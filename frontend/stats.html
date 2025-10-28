@@ -163,6 +163,8 @@
     </div>
 
     <script src="settings.js"></script>
+    <script src="user-manager.js"></script>
+    <script src="common.js"></script>
     <script src="form-config.js"></script>
     <script>
         let chart = null;
@@ -186,7 +188,7 @@
                 });
 
                 const response = await fetch(
-                    `${API_BASE_URL}/stats/metrics-over-time?days=${days}&metrics=${selectedMetrics.join(',')}`
+                    `${SETTINGS.API_BASE_URL}/stats/metrics-over-time?days=${days}&metrics=${selectedMetrics.join(',')}`
                 );
 
                 if (!response.ok) {
@@ -315,7 +317,7 @@
 
         async function loadSummaryStats() {
             try {
-                const response = await fetch(`${API_BASE_URL}/stats/summary`);
+                const response = await fetch(`${SETTINGS.API_BASE_URL}/stats/summary`);
                 const data = await response.json();
                 displaySummaryStats(data);
             } catch (error) {
@@ -352,7 +354,7 @@
 
         async function loadWeekdayAverages() {
             try {
-                const response = await fetch(`${API_BASE_URL}/stats/weekday-averages`);
+                const response = await fetch(`${SETTINGS.API_BASE_URL}/stats/weekday-averages`);
                 const data = await response.json();
                 createWeekdayChart(data);
             } catch (error) {
@@ -399,7 +401,7 @@
 
         async function loadCorrelations() {
             try {
-                const response = await fetch(`${API_BASE_URL}/stats/correlations`);
+                const response = await fetch(`${SETTINGS.API_BASE_URL}/stats/correlations`);
                 const data = await response.json();
                 displayCorrelations(data);
             } catch (error) {
@@ -426,7 +428,7 @@
 
         async function loadLaggedAnalysis() {
             try {
-                const response = await fetch(`${API_BASE_URL}/stats/lagged-correlations`);
+                const response = await fetch(`${SETTINGS.API_BASE_URL}/stats/lagged-correlations`);
                 const data = await response.json();
                 displayLaggedAnalysis(data);
             } catch (error) {
@@ -483,7 +485,7 @@
 
         async function downloadData(format) {
             try {
-                const response = await fetch(`${API_BASE_URL}/export/${format}`);
+                const response = await fetch(`${SETTINGS.API_BASE_URL}/export/${format}`);
 
                 if (!response.ok) {
                     throw new Error(`Failed to download ${format.toUpperCase()}`);
@@ -567,5 +569,12 @@
             window.URL.revokeObjectURL(url);
         });
     </script>
+    <footer class="app-footer">
+        <div class="footer-content">
+            <span>User ID: <span id="footer-userid">loading...</span></span>
+            <span>Backend URL: <span id="footer-backend-url">loading...</span></span>
+        </div>
+    </footer>
+
 </body>
 </html>
