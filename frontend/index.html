@@ -190,11 +190,17 @@ document.getElementById('entry-date').addEventListener('change', function() {
 form.addEventListener('submit', async function(e) {
     e.preventDefault();
 
+    if (!userManager.isValid()) {
+        showErrorBanner('No valid user ID found. Please use your original invitation link.');
+        return;
+    }
+
     const submitBtn = this.querySelector('button[type="submit"]');
     const originalText = submitBtn.textContent;
 
     const formData = FormUtils.collectFormData();
     formData.date = currentDate.toISOString().split('T')[0]; // Use selected date
+    formData.uid = userManager.getUID(); 
 
     try {
         submitBtn.textContent = 'Saving...';
@@ -230,7 +236,7 @@ form.addEventListener('submit', async function(e) {
         console.error('Error saving data to backend at API BASE URL ' + `${SETTINGS.API_BASE_URL}` + ' :', error);
         console.log('Falling back to localStorage...');
         saveToStorage(formData);
-        showBackendErrorBanner('Saved to local storage (backend API error: ' + error.message + ')');
+        showErrorBanner('Saved to local storage (backend API error: ' + error.message + ')');
         updateEntryStatus(true);
     } finally {
         submitBtn.textContent = currentEntryExists ? 'Update Entry' : 'Save Entry';
@@ -240,8 +246,12 @@ form.addEventListener('submit', async function(e) {
 
 // Update the loadEntryForDate function to set the status
 async function loadEntryForDate(date) {
+    if (!userManager.isValid()) {
+        showErrorBanner('No valid user ID found. Please use your original invitation link.');
+        return;
+    }
     try {
-        const response = await fetch(`${SETTINGS.API_BASE_URL}/entries/?start_date=${date}&end_date=${date}`);
+        const response = await fetch(`${SETTINGS.API_BASE_URL}/entries/?start_date=${date}&end_date=${date}&uid=${userManager.getUID()}`);
 
         if (response.ok) {
             const entries = await response.json();
@@ -262,7 +272,7 @@ async function loadEntryForDate(date) {
     } catch (error) {
         console.log('API unavailable at API BASE URL ' + `${SETTINGS.API_BASE_URL}` + ', checking localStorage...');
         // Fallback to localStorage
-        showBackendErrorBanner('Failed to load data from backend.');
+        showErrorBanner('Failed to load data from backend.');
         const existingData = JSON.parse(localStorage.getItem('healthData') || '[]');
         const existingEntry = existingData.find(entry => entry.date === date);
 

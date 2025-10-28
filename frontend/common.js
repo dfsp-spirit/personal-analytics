@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // common.js - Backend error banner with custom messages
 
-function showBackendErrorBanner(message = 'Backend connection failed') {
+function showErrorBanner(message = 'Backend connection failed') {
     // Remove existing banner if any
     const existingBanner = document.getElementById('backend-error-banner');
     if (existingBanner) {

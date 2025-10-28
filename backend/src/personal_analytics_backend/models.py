@@ -7,6 +7,7 @@ import calendar
 import uuid
 
 class HealthEntryBase(SQLModel):
+    uid: str = Field(index=True)  # Add user identifier field
     date: str = Field(index=True, unique=True)
     timestamp: datetime = Field(default_factory=datetime.now)
     day_of_week: Optional[int] = Field(  # Store in DB for querying
@@ -74,6 +75,7 @@ class HealthEntryRead(HealthEntryBase):
 
 class HealthEntryUpdate(SQLModel):
     # All fields optional for updates
+    uid: Optional[str] = None
     mood: Optional[int] = None
     pain: Optional[int] = None
     energy: Optional[int] = None

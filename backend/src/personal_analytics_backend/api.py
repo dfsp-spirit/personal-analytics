@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request, status, Response, Depends
+from fastapi import FastAPI, HTTPException, Request, status, Response, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from fastapi.responses import JSONResponse
@@ -171,6 +171,10 @@ async def validation_exception_handler(request: Request, exc: ValidationError):
 
 @app.post("/entries/", response_model=HealthEntryRead)
 def submit_entry(entry: HealthEntryCreate, session: Session = Depends(get_session)):
+
+    if not entry.uid:
+        raise HTTPException(status_code=400, detail="User ID (uid) is required")
+
     # Use the date from the submitted entry, not today!
     target_date = entry.date
 
@@ -180,12 +184,13 @@ def submit_entry(entry: HealthEntryCreate, session: Session = Depends(get_sessio
     entry.day_of_week = computed_day_of_week
 
     existing_entry = session.exec(
-        select(HealthEntry).where(HealthEntry.date == target_date)  # ← Changed from today to target_date
+        select(HealthEntry).where(HealthEntry.date == target_date,
+               HealthEntry.uid == entry.uid)
     ).first()
 
     if existing_entry:
         # Update existing entry - EXCLUDE DATE from updates
-        update_data = entry.dict(exclude_unset=True, exclude={'date'})  # Critical: exclude date
+        update_data = entry.dict(exclude_unset=True, exclude={'date', 'uid'})
         for field, value in update_data.items():
             setattr(existing_entry, field, value)
 
@@ -220,11 +225,12 @@ def read_all_entries(
     limit: int = 100,
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
+    uid: str = Query(..., description="User ID required"),
     session: Session = Depends(get_session)
 ):
     """Get all health entries with optional filtering"""
 
-    query = select(HealthEntry)
+    query = select(HealthEntry).where(HealthEntry.uid == uid)  # Filter by UID
 
     if start_date:
         query = query.where(HealthEntry.date >= start_date)
@@ -237,18 +243,20 @@ def read_all_entries(
     return entries
 
 @app.get("/entries/today", response_model=Optional[HealthEntryRead])
-def read_today_entry(session: Session = Depends(get_session)):
+def read_today_entry(uid: str = Query(..., description="User ID required"), session: Session = Depends(get_session)):
     """Get today's entry if it exists"""
     today = datetime.now().date().isoformat()
     entry = session.exec(
-        select(HealthEntry).where(HealthEntry.date == today)
+        select(HealthEntry).where(HealthEntry.date == today, HealthEntry.uid == uid)
     ).first()
     return entry
 
 @app.get("/entries/{entry_id}", response_model=HealthEntryRead)
 def read_entry(entry_id: str, session: Session = Depends(get_session)):
     """Get a specific entry by ID"""
-    entry = session.get(HealthEntry, entry_id)
+    entry = session.exec(
+        select(HealthEntry).where(HealthEntry.id == entry_id)
+    ).first()
     if not entry:
         raise HTTPException(status_code=404, detail="Entry not found")
     return entry
@@ -279,6 +287,7 @@ def health_check(session: Session = Depends(get_session)):
 def get_metrics_over_time(
     days: int = 30,  # Default to last 30 days
     metrics: List[str] = None,  # Optional: specific metrics to return
+    uid: str = Query(..., description="User ID required"),  # Add UID parameter
     session: Session = Depends(get_session)
 ):
     """Get metrics data for visualization over time"""
@@ -289,6 +298,7 @@ def get_metrics_over_time(
 
     # Query entries in date range
     query = select(HealthEntry).where(
+        HealthEntry.uid == uid,
         HealthEntry.date >= start_date.isoformat(),
         HealthEntry.date <= end_date.isoformat()
     ).order_by(HealthEntry.date)
@@ -318,7 +328,7 @@ from typing import List, Dict, Any
 import statistics
 
 @app.get("/stats/weekday-averages")
-def get_weekday_averages(session: Session = Depends(get_session)):
+def get_weekday_averages(uid: str = Query(..., description="User ID required"), session: Session = Depends(get_session)):
     """Get average metrics per weekday"""
     result = session.exec(
         select(
@@ -329,7 +339,7 @@ def get_weekday_averages(session: Session = Depends(get_session)):
             func.avg(HealthEntry.sleep_quality).label('avg_sleep_quality'),
             func.avg(HealthEntry.sexual_wellbeing).label('avg_sexual_wellbeing'),
             func.count(HealthEntry.id).label('entry_count')
-        )
+        ).where(HealthEntry.uid == uid)
         .group_by(HealthEntry.day_of_week)
         .order_by(HealthEntry.day_of_week)
     ).all()
@@ -353,7 +363,7 @@ def get_weekday_averages(session: Session = Depends(get_session)):
     return averages
 
 @app.get("/stats/correlations")
-def get_correlations(session: Session = Depends(get_session)):
+def get_correlations(uid: str = Query(..., description="User ID required"), session: Session = Depends(get_session)):
     """Calculate correlations between different metrics"""
     # Get all entries with the metrics we want to correlate
     entries = session.exec(
@@ -366,6 +376,7 @@ def get_correlations(session: Session = Depends(get_session)):
             HealthEntry.stress_level_work,
             HealthEntry.stress_level_home
         ).where(
+            HealthEntry.uid == uid,
             HealthEntry.mood.isnot(None),
             HealthEntry.pain.isnot(None)
         )
@@ -473,7 +484,7 @@ def get_lagged_correlations(session: Session = Depends(get_session)):
         )
 
 @app.get("/stats/summary")
-def get_summary_stats(session: Session = Depends(get_session)):
+def get_summary_stats(uid: str = Query(..., description="User ID required"), session: Session = Depends(get_session)):
     """Get overall summary statistics"""
     result = session.exec(
         select(
@@ -485,7 +496,7 @@ def get_summary_stats(session: Session = Depends(get_session)):
             func.avg(HealthEntry.energy).label('avg_energy'),
             func.avg(HealthEntry.sexual_wellbeing).label('avg_sexual_wellbeing'),
             func.avg(HealthEntry.step_count).label('avg_step_count')
-        )
+        ).where(HealthEntry.uid == uid)
     ).first()
 
     # Most recent streak of entries
@@ -494,6 +505,7 @@ def get_summary_stats(session: Session = Depends(get_session)):
             SELECT date::date as entry_date,
                    LAG(date::date) OVER (ORDER BY date) as prev_date
             FROM healthentry
+            WHERE uid = :user_id
             ORDER BY date
         ),
         gaps AS (
@@ -520,7 +532,7 @@ def get_summary_stats(session: Session = Depends(get_session)):
         LIMIT 1
     """)
 
-    streak_result = session.exec(streak_query).first()
+    streak_result = session.execute(streak_query, {"user_id": uid}).first()
 
     return {
         'total_entries': result.total_entries,
@@ -544,7 +556,10 @@ def get_summary_stats(session: Session = Depends(get_session)):
 
 @app.get("/export/csv")
 def export_all_data_csv(session: Session = Depends(get_session)):
-    """Export all health data as CSV for analysis in pandas/excel"""
+    """
+    Export all health data as CSV for analysis in pandas/excel.
+    Note that this export all data, not limited to a specific user.
+    """
 
     # Get all entries ordered by date
     entries = session.exec(
@@ -560,7 +575,7 @@ def export_all_data_csv(session: Session = Depends(get_session)):
 
     # Define CSV headers - include all fields from your model
     headers = [
-        'id', 'date', 'timestamp', 'day_of_week', 'day_name', 'is_weekend',
+        'id', 'uid', 'date', 'timestamp', 'day_of_week', 'day_name', 'is_weekend',
         'mood', 'pain', 'energy',
         'allergy_state', 'allergy_medication',
         'had_sex', 'sexual_wellbeing', 'sleep_quality',
@@ -586,6 +601,7 @@ def export_all_data_csv(session: Session = Depends(get_session)):
     for entry in entries:
         row = [
             entry.id,
+            entry.uid or 'default',
             entry.date,
             entry.timestamp.isoformat() if entry.timestamp else '',
             entry.day_of_week,
@@ -629,7 +645,10 @@ def export_all_data_csv(session: Session = Depends(get_session)):
 
 @app.get("/export/json")
 def export_all_data_json(session: Session = Depends(get_session)):
-    """Export all health data as JSON"""
+    """
+    Export all health data as JSON.
+    Note that this export all data, not limited to a specific user.
+    """
 
     entries = session.exec(
         select(HealthEntry).order_by(HealthEntry.date)

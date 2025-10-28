@@ -188,7 +188,7 @@
                 });
 
                 const response = await fetch(
-                    `${SETTINGS.API_BASE_URL}/stats/metrics-over-time?days=${days}&metrics=${selectedMetrics.join(',')}`
+                    `${SETTINGS.API_BASE_URL}/stats/metrics-over-time?days=${days}&metrics=${selectedMetrics.join(',')}&uid=${userManager.getUID()}`
                 );
 
                 if (!response.ok) {
@@ -317,12 +317,12 @@
 
         async function loadSummaryStats() {
             try {
-                const response = await fetch(`${SETTINGS.API_BASE_URL}/stats/summary`);
+                const response = await fetch(`${SETTINGS.API_BASE_URL}/stats/summary?uid=${userManager.getUID()}`);
                 const data = await response.json();
                 displaySummaryStats(data);
             } catch (error) {
                 console.error('Error loading summary stats:', error);
-                showBackendErrorBanner('Failed to load statistics');
+                showErrorBanner('Failed to load statistics');
             }
         }
 
@@ -355,7 +355,7 @@
 
         async function loadWeekdayAverages() {
             try {
-                const response = await fetch(`${SETTINGS.API_BASE_URL}/stats/weekday-averages`);
+                const response = await fetch(`${SETTINGS.API_BASE_URL}/stats/weekday-averages?uid=${userManager.getUID()}`);
                 const data = await response.json();
                 createWeekdayChart(data);
             } catch (error) {
@@ -402,8 +402,9 @@
 
         async function loadCorrelations() {
             try {
-                const response = await fetch(`${SETTINGS.API_BASE_URL}/stats/correlations`);
+                const response = await fetch(`${SETTINGS.API_BASE_URL}/stats/correlations?uid=${userManager.getUID()}`);
                 const data = await response.json();
+                //console.log('Correlations response:', data);
                 displayCorrelations(data);
             } catch (error) {
                 console.error('Error loading correlations:', error);
@@ -412,6 +413,22 @@
 
         function displayCorrelations(correlations) {
             const container = document.getElementById('correlation-matrix');
+
+            // Check if we got an error object instead of an array
+            if (!Array.isArray(correlations)) {
+                if (correlations.error) {
+                    container.innerHTML = `<p style="text-align: center; color: #666; font-style: italic;">${correlations.error}</p>`;
+                } else {
+                    container.innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">No correlation data available</p>';
+                }
+                return;
+            }
+
+            // Check if we have any correlations to display
+            if (correlations.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">No correlations found (insufficient data)</p>';
+                return;
+            }
 
             // Show top 10 strongest correlations
             const topCorrelations = correlations.slice(0, 10);
@@ -429,7 +446,7 @@
 
         async function loadLaggedAnalysis() {
             try {
-                const response = await fetch(`${SETTINGS.API_BASE_URL}/stats/lagged-correlations`);
+                const response = await fetch(`${SETTINGS.API_BASE_URL}/stats/lagged-correlations?uid=${userManager.getUID()}`);
                 const data = await response.json();
                 displayLaggedAnalysis(data);
             } catch (error) {
@@ -469,7 +486,7 @@
             await loadLaggedAnalysis();
             } catch (error) {
                 console.error('Error loading analytics:', error);
-                showBackendErrorBanner('Failed to load analytics data');
+                showErrorBanner('Failed to load analytics data');
             }
         }
 
