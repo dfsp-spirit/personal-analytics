@@ -322,6 +322,7 @@
                 displaySummaryStats(data);
             } catch (error) {
                 console.error('Error loading summary stats:', error);
+                showBackendErrorBanner('Failed to load statistics');
             }
         }
 
@@ -460,11 +461,16 @@
 
         // Update your existing load function to include all analytics
         async function loadAllAnalytics() {
+            try {
             await updateChart(); // Your existing function
             await loadSummaryStats();
             await loadWeekdayAverages();
             await loadCorrelations();
             await loadLaggedAnalysis();
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+                showBackendErrorBanner('Failed to load analytics data');
+            }
         }
 
         // Event listeners

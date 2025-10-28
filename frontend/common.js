@@ -32,3 +32,74 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(updateFooterBackendURL, 50);
 });
 
+
+// common.js - Backend error banner with custom messages
+
+function showBackendErrorBanner(message = 'Backend connection failed') {
+    // Remove existing banner if any
+    const existingBanner = document.getElementById('backend-error-banner');
+    if (existingBanner) {
+        existingBanner.remove();
+    }
+
+    const banner = document.createElement('div');
+    banner.id = 'backend-error-banner';
+    banner.innerHTML = `
+        <div class="backend-error-banner">
+            ⚠️ ${message}
+            <button class="banner-close" onclick="this.parentElement.parentElement.remove()">×</button>
+        </div>
+    `;
+
+    // Insert at the top of the body
+    document.body.insertBefore(banner, document.body.firstChild);
+
+    // Auto-remove after 8 seconds
+    setTimeout(() => {
+        if (banner.parentElement) {
+            banner.remove();
+        }
+    }, 8000);
+}
+
+// CSS for the banner (add to styles.css)
+const backendErrorCSS = `
+.backend-error-banner {
+    background: #fff3cd;
+    color: #856404;
+    padding: 12px 40px 12px 20px;
+    border: 1px solid #ffeaa7;
+    border-radius: 4px;
+    margin: 10px;
+    text-align: center;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: relative;
+}
+
+.banner-close {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: #856404;
+    padding: 0 5px;
+}
+
+.banner-close:hover {
+    color: #000;
+}
+`;
+
+// Add CSS to page
+if (!document.querySelector('#backend-error-styles')) {
+    const styleSheet = document.createElement("style");
+    styleSheet.id = 'backend-error-styles';
+    styleSheet.textContent = backendErrorCSS;
+    document.head.appendChild(styleSheet);
+}
+

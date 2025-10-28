@@ -230,10 +230,8 @@ form.addEventListener('submit', async function(e) {
         console.error('Error saving data to backend at API BASE URL ' + `${SETTINGS.API_BASE_URL}` + ' :', error);
         console.log('Falling back to localStorage...');
         saveToStorage(formData);
-        alert('Saved to local storage (backend API error: ' + error.message + ')');
-        // Update status for localStorage too
+        showBackendErrorBanner('Saved to local storage (backend API error: ' + error.message + ')');
         updateEntryStatus(true);
-
     } finally {
         submitBtn.textContent = currentEntryExists ? 'Update Entry' : 'Save Entry';
         submitBtn.disabled = false;
@@ -264,6 +262,7 @@ async function loadEntryForDate(date) {
     } catch (error) {
         console.log('API unavailable at API BASE URL ' + `${SETTINGS.API_BASE_URL}` + ', checking localStorage...');
         // Fallback to localStorage
+        showBackendErrorBanner('Failed to load data from backend.');
         const existingData = JSON.parse(localStorage.getItem('healthData') || '[]');
         const existingEntry = existingData.find(entry => entry.date === date);
 
