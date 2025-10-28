@@ -1,5 +1,6 @@
 [
   {
+    "uid": "default",
     "day_of_week": 4,
     "stress_level_work": 2,
     "pain": 2,
@@ -52,6 +53,7 @@
     "is_weekend": false
   },
   {
+    "uid": "default",
     "day_of_week": 5,
     "stress_level_work": 1,
     "pain": 2,
@@ -104,6 +106,7 @@
     "is_weekend": true
   },
   {
+    "uid": "default",
     "day_of_week": 6,
     "stress_level_work": 0,
     "pain": 5,
@@ -156,6 +159,7 @@
     "is_weekend": true
   },
   {
+    "uid": "default",
     "day_of_week": 0,
     "stress_level_work": 2,
     "pain": 4,
@@ -208,6 +212,7 @@
     "is_weekend": false
   },
   {
+    "uid": "default",
     "day_of_week": 1,
     "stress_level_work": 2,
     "pain": 3,
@@ -260,6 +265,7 @@
     "is_weekend": false
   },
   {
+    "uid": "default",
     "day_of_week": 2,
     "stress_level_work": 1,
     "pain": 2,
@@ -312,6 +318,7 @@
     "is_weekend": false
   },
   {
+    "uid": "default",
     "day_of_week": 3,
     "stress_level_work": 1,
     "pain": 2,
@@ -364,6 +371,7 @@
     "is_weekend": false
   },
   {
+    "uid": "default",
     "day_of_week": 4,
     "stress_level_work": 2,
     "pain": 2,
