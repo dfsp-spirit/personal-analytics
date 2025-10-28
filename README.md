@@ -11,12 +11,14 @@ In any case, be careful when drawing conclusions. Don't take it too seriously un
 
 ## Development state
 
-Very early alpha, definitely not ready for production.
+Quite early, do not use in production yet.
 
 
 ## Development setup
 
 This section explains how to install and run the app for development. It assumes you have some Debian/Ubuntu flavor, but this works on all distros of course. You may need to adapt the paths of system-wide config files or the commands for package installation to your preferred OS, of course.
+
+Note: These instructions use very light-weight services and a setup that differs from typical production settings. If you intend to use the app in production, and have come up with a deployment strategy, we recommend changing your development setup to more closely mimick your production environment.
 
 
 ### Frontend Installation for Development
