@@ -120,6 +120,7 @@ We will create a system service for it, along with a dedicated user, that ensure
 * automatically run at boot
 * automatically restarted when it is stopped for other reasons
 
+**IMPORTANT**: The backend must **never** be stored in a directory under your web root directory, and the backend WSGI server must **never** run on a public interface.
 
 Create the installation directory for the backend application and copy the files there:
 
