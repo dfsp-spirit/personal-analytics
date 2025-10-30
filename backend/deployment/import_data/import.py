@@ -1,19 +1,39 @@
 #!/usr/bin/env python3
+#
+# This script imports health data from a JSON export file into the backend system via its REST API.
+# It supports HTTP Basic Authentication for secure access in case the API is protected via authentication.
+#
+# A demo file used for testing comes in this directory.
+# You can obtain the JSON export file by exporting your data from the system first, via the web interface or
+# via the API.
+#
+# Usage: python import.py <filename> [--api-base <url>] [--username <user>] [--password <pass>]
+#
+# You will need to have the 'requests' library installed. You can install it via pip: `pip install requests`,
+# preferably in a virtual environment.
+#
 
 import requests
 import json
-import sys
 import argparse
 from requests.auth import HTTPBasicAuth
 
 # Configuration
-API_BASE = "http://localhost:8000"  # Change to your production URL
-USERNAME = "john"
-PASSWORD = "doe"
+API_BASE = "http://localhost:8000"  # Change to your production URL/system URL as needed.
+# On the following lines: if you have not set up HTTP authentication for the API on your server (e.g., dev mode),
+# you can leave these as is, or set to empty strings for clarity.
+# In any case, sending username/password will not harm if authentication is not enforced, the server will simply ignore them.
+HTTP_AUTH_USERNAME = "john"   # The default username for HTTP authentication, typically set in htpasswd file of web server.
+HTTP_AUTH_PASSWORD = "doe"    # The default password for HTTP authentication, typically set in htpasswd file of web server.
 
-def import_data(filename, api_base=API_BASE, username=USERNAME, password=PASSWORD):
+
+def import_data(filename : str, api_base: str = API_BASE, username: str = HTTP_AUTH_USERNAME, password: str = HTTP_AUTH_PASSWORD):
     """
     Import health data from JSON export file
+    @param filename: Path to the JSON file to import
+    @param api_base: Base URL of the API
+    @param username: HTTP Basic Auth username, will be ignored if authentication is not enforced
+    @param password: HTTP Basic Auth password, will be ignored if authentication is not enforced
     """
     try:
         with open(filename, 'r', encoding='utf-8') as f:
@@ -28,8 +48,8 @@ def import_data(filename, api_base=API_BASE, username=USERNAME, password=PASSWOR
     print(f"Found {len(entries)} entries in {filename}")
     print(f"Using API: {api_base}")
 
-    success_count = 0
-    error_count = 0
+    success_count : int = 0
+    error_count : int = 0
 
     for i, entry in enumerate(entries, 1):
         try:
@@ -37,7 +57,7 @@ def import_data(filename, api_base=API_BASE, username=USERNAME, password=PASSWOR
                 f"{api_base}/entries/",
                 json=entry,
                 auth=HTTPBasicAuth(username, password),
-                timeout=30  # 30 second timeout
+                timeout=20 # seconds
             )
 
             if response.status_code in [200, 201]:
@@ -60,15 +80,19 @@ def import_data(filename, api_base=API_BASE, username=USERNAME, password=PASSWOR
     print(f"   ❌ Failed: {error_count}")
     print(f"   📋 Total: {len(entries)}")
 
+
 def main():
+    """
+    Main entry point for the script.
+    """
     parser = argparse.ArgumentParser(description='Import health data from JSON export')
     parser.add_argument('filename', help='JSON file to import')
     parser.add_argument('--api-base', default=API_BASE,
                        help=f'API base URL (default: {API_BASE})')
-    parser.add_argument('--username', default=USERNAME,
-                       help=f'Basic Auth username (default: {USERNAME})')
-    parser.add_argument('--password', default=PASSWORD,
-                       help=f'Basic Auth password (default: {PASSWORD})')
+    parser.add_argument('--username', default=HTTP_AUTH_USERNAME,
+                       help=f'Basic Auth username (default: {HTTP_AUTH_USERNAME})')
+    parser.add_argument('--password', default=HTTP_AUTH_PASSWORD,
+                       help=f'Basic Auth password (default: {HTTP_AUTH_PASSWORD})')
 
     args = parser.parse_args()
 
