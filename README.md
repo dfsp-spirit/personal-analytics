@@ -50,13 +50,14 @@ cd frontend/
 python -m http.server 3000  # serve frontend on http://localhost:3000
 ```
 
+You can now connect to [http://localhost:3000](http://localhost:3000) with your browser. You should see the frontend already, though without a backend it's not much use.
 
 
 ### Backend Installation for Development
 
 Make sure you have `uv` and `git`.
 
-First clone the repo, if you do not have it yet from the backend setup.
+First clone the repo, if you do not have it yet from the frontend setup above.
 
 ```sh
 git clone https://github.com/dfsp-spirit/personal-analytics
@@ -77,28 +78,21 @@ Then setup the postgresql database:
 ```sh
 sudo apt install postgresql # installs db server and starts it with a default config
 cd backend/
-sudo ./setup_db.sh   # Create a database for our app. Will use the settings from <repo_root>/backend/.env you adapted above.
+sudo ./setup_db.sh   # Create a database for our app using the settings from <repo_root>/backend/.env you adapted above.
 ```
 
-
-
-Then install in dev mode:
+Then install:
 
 ```sh
-cd backend
 uv venv   # Create virtual env and install deps with uv
-source .venv/bin/activate  # or .venv\Scripts\activate on Windows
 
 # Install package in editable mode
 uv pip install -e .
-
-# Or install with dev dependencies
-uv pip install -e ".[dev]"
 ```
 
-That's it for the backend.
+That's it for the backend installation.
 
-### Runnnig the backend
+### Running the backend
 
 To run it once its installed:
 
@@ -145,7 +139,7 @@ You can now access your services:
 * I get a similar error as above, but in the console I see the reason given as something like `Mixed Content: The page at 'page' was loaded over HTTPS, but requested an insecure resource` or similar, depending on the browser used. Why?
     - You have most likely configured SSL/HTTPS for your website, but the frontend loads some resources via a HTTP scheme. E.g., the frontend is accessible at https://your-domain.org/pa/, but it connects to a backend API URL configured as `API_BASE_URL = 'http://localhost:8000'` instead of `https://localhost:8000'`. It could also be any other resource you load, like a javascript file sourced from a remote server via a HTTP scheme instead of HTTPS.
 * I see a CORS error in the browser console that says the origin is not allowed. What is wrong?
-    - In your backend, you will need to explicitely allow requests from your frontend domain. This is configured in [backend/api.py](./backend/api.py) at the top, in a function call to `app.add_middleware()`, in a line that looks like `allow_origins=["http://localhost:3000"]`. You will need to adapt this line to your backend scheme and location, e.g., in production, when the frontend is accessible to users at `https://your-domain.org/pa/`, this needs to be `allow_origins=["https://your-domain.org"]`. Note that CORS origins are a combination of scheme, host, and optionally port, but do not include the path (the `/pa/` in this case).
+    - In your backend, you will need to explicitely allow requests from your frontend domain. This is configured in the `backend/.env` file you were asked to adapt during backend setup above. You will need to adapt this line to your backend scheme and location, and it expects a JSON array of strings. So for example, in production, if the frontend is accessible to users at `https://your-domain.org/pa/`, this needs to be `allow_origins=["https://your-domain.org"]`. Note that CORS origins are a combination of scheme, host, and optionally port, but do not include the path (the `/pa/` in this case). If you omit the port, for scheme `https://`, the assumed port is `443`, for `http://`, it is `80`. For local development, you would set this to `allow_origins=["http://127.0.0.1:3000", "http://localhost:3000"]`.
 
 
 ## Deployment options
