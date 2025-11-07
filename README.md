@@ -115,8 +115,8 @@ You can now access your services:
     - In the frontend:
         * the form is generated from the definition in variable `FORM_CONFIG` in file [frontend/form-config.js](./frontend/form-config.js). Look at the examples and add or replace the fields as you see fit.
     - In the backend:
-  -     * each key in the FORM_CONFIG of the frontend goes to a column in the database. You need to adapt the data model in the file [backend/src/personal_analytics_backend/models.py](./backend/src/personal_analytics_backend/models.py) to suit the changes you made in the frontend. Have a look at the existing entries, it's easy.
-  -     * in the file [backend/src/personal_analytics_backend/api.py](./backend/src/personal_analytics_backend/api.py), you need to adapt the functions `export_all_data_csv()` so that your new fields are handled on data export to CSV files. The function `export_all_data_json()` in the same file should not need changes typically, but double-check it.
+        * each key in the FORM_CONFIG of the frontend goes to a column in the database. You need to adapt the data model in the file [backend/src/personal_analytics_backend/models.py](./backend/src/personal_analytics_backend/models.py) to suit the changes you made in the frontend. Have a look at the existing entries, it's easy.
+        * in the file [backend/src/personal_analytics_backend/api.py](./backend/src/personal_analytics_backend/api.py), you need to adapt the functions `export_all_data_csv()` so that your new fields are handled on data export to CSV files. The function `export_all_data_json()` in the same file should not need changes typically, but double-check it.
 * I need a new custom input component that is not available yet, i.e., my new entry to the `FORM_CONFIG` must have a type other than the existing ones (`slider`, `radio`, `select`, ...).
     - In that case you will need to make changes to several functions in the frontend:
         * Add a new field to your `FORM_CONFIG` in [form-config.js](./frontend/form-config.js) that uses your new type, so that you can see whether it works.
