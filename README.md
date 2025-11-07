@@ -132,7 +132,7 @@ You can now access your services:
         * In [styles.css](./frontend/styles.css), add the new style definitions for your component
     - As descibed in the first question above, you will also need to adapt the database model to make sure the new field that will be send to the backend is recognized and saved properly, and adapt the data export functions.
 
-### Troubleshooting
+### Troubleshooting FAQ
 
 * When opening the web app in the browser, I see no data in the form and I cannot submit. In web developer tools console, I see a network error with reason 'CORS request not HTTP'. What does this mean?
     - There are different options why this happens, but in general some resource you load in your frontend code is not loaded from HTTP/HTTPS scheme (a link starting with `http://` or `https://`), but something different, e.g., from `file:///` or something implicitely interpreted as such. This can happen if you give, in the `frontend/settings.js` file, something like `const API_BASE_URL = 'localhost:8000';` instead of `const API_BASE_URL = 'http://localhost:8000';` or `const API_BASE_URL = 'https://your-domain.org:8000';`. It can also happen if you really load something via a `file:///` URL, which can easily be checked by something like `fgreg -rni 'file://' frontend/` in the shell.
