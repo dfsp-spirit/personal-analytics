@@ -10,7 +10,7 @@ Group=pa-user
 WorkingDirectory=/opt/pa-backend/
 Environment=PATH=/opt/pa-backend/.venv/bin
 Environment=UV_CACHE_DIR=/var/cache/pa-user
-ExecStart=/opt/pa-backend/.venv/bin/uvicorn personal_analytics_backend.api:app --host 127.0.0.1 --port 8000
+ExecStart=/opt/pa-backend/.venv/bin/gunicorn -c gunicorn_conf.py personal_analytics_backend.api:app
 Restart=always
 RestartSec=10
 TimeoutStopSec=30
