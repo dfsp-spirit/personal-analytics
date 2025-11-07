@@ -1,6 +1,6 @@
 [project]
 name = "personal-analytics-backend"
-version = "0.1.0"
+version = "0.3.0"
 description = "Backend for personal health analytics"
 authors = [
     {name = "Tim Schäfer", email = "ts+code@rcmd.org"},
