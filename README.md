@@ -111,6 +111,8 @@ You can now access your services:
 
 ## Quick Documentation
 
+### Customizing the App
+
 * How to configure the form to my needs, i.e., change the questions in the questionaire?
     - In the frontend:
         * the form is generated from the definition in variable `FORM_CONFIG` in file [frontend/form-config.js](./frontend/form-config.js). Look at the examples and add or replace the fields as you see fit.
