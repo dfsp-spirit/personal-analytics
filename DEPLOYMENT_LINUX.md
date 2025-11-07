@@ -28,7 +28,7 @@ We will be running everything on this machine:
 
 ## Deployment preparations
 
-Clone the personal-analytics repo to your server, for this document we assume you put it into `~/personal-analytics/`:
+Download a release or clone the personal-analytics repo to your server, for this document we assume you clone and put it into `~/personal-analytics/`:
 
 ```sh
 cd
@@ -114,6 +114,8 @@ If you now restart nginx and connect to https://your-domain.org/pa, you should s
 
 The most critical part is the backend.
 
+First make sure you have a wheel build of the backend app, download from a Github release of PA or created yourself via `uv build` on your development machine in the `backend/` directory of the git repo. We will assume the filename is `personal_analytics_backend-0.1.0-py3-none-any.whl`.
+
 We will create a system service for it, along with a dedicated user, that ensure the service is:
 
 * run in a secure and isolated way by a dedicated system user
@@ -127,7 +129,8 @@ Create the installation directory for the backend application and copy the files
 ```sh
 # Copy backend app to installation directory, we will use /opt/pa-backend/
 sudo mkdir -p /opt/pa-backend
-sudo cp -r ~/personal-analytics/backend/* /opt/pa-backend
+#sudo cp -r ~/personal-analytics/backend/* /opt/pa-backend # Not needed anymore to copy individual files from repo, we install via wheel
+sudo cp personal_analytics_backend-0.1.0-py3-none-any.whl /opt/pa-backend
 sudo cp ~/personal-analytics/backend/env.example /opt/pa-backend/.env
 sudo vim /opt/pa-backend/.env # Adapt settings in here, like database credentials.
 ```
@@ -183,7 +186,8 @@ sudo chown pa-user:pa-user /var/cache/pa-user/
 # Switch to service user and install app in the service directory
 cd /opt/pa-backend
 sudo -u pa-user UV_CACHE_DIR=/var/cache/pa-user/ uv venv   # will create a virtual environment at /opt/pa-backend/.venv
-sudo -u pa-user UV_CACHE_DIR=/var/cache/pa-user/ uv pip install -e .   # will install into the .venv
+#sudo -u pa-user UV_CACHE_DIR=/var/cache/pa-user/ uv pip install -e .   # will install into the .venv from source, no longer needed, we use wheel:
+sudo -u pa-user UV_CACHE_DIR=/var/cache/pa-user/ uv pip install --force-reinstall ./personal_analytics_backend-0.1.0-py3-none-any.whl
 ```
 
 Ensure you can start the backend manually:
@@ -197,8 +201,8 @@ Once that works, setup a system service. E.g., for Ubuntu, copy the template ser
 
 
 ```sh
-sudo cp backend/deployment/personal-analytics.service.template /etc/systemd/system/pa-backend
-sudo vim /etc/systemd/system/pa-backend  # Adapt user, security, path to the software and venv you created during installation, etc. Required.
+sudo cp backend/deployment/personal-analytics.service.template /etc/systemd/system/pa-backend.service
+sudo vim /etc/systemd/system/pa-backend.service  # Adapt user, security, path to the software and venv you created during installation, etc. Required.
 ```
 Now you can use standard systemctl commands to manage the service, e.g.,
 
@@ -247,4 +251,47 @@ Note that we also protected the backend with HTTP basic auth, using the *same re
 If someone was to discover the endpoint though (guess the URL), and try to use it without the frontend (circumvent the frontend via curl, wget, whatever), they would need to provide authentication headers in their request.
 
 Note that users connect to your website ONLY via the standard web ports 80/443 (HTTP/HTTPS), and never directly to uvicorn and port 8000, of course. So there is no need to open your firewall to the internet on that port: leave port 8000/TCP closed. If your webserver worked before, there is no need to mess with any firewall rules.
+
+
+### Backend update quick instructions
+
+Let us assume you have a new version `personal_analytics_backend-0.2.0-py3-none-any.whl` and want to re-deploy. Here is what to do. This assumes the database needs no migration.
+
+#### Copy Files to Server
+
+Note: These commands assume your user can write to `/opt/pa-backend/`. If that is not the case, you may need to copy to your home vis SSH for now, and move to the correct directory later on the server as a different user.
+
+```bash
+## Copy the wheel file (check dist/ for the exact filename)
+scp dist/personal_analytics_backend-0.2.0-py3-none-any.whl user@your-server:/opt/pa-backend/
+
+## ONLY Copy your .env file and gunicorn config if they changed, make sure to copy the correct (production) ones.
+#scp .env user@your-server:/opt/pa-backend/
+#scp gunicorn_conf.py user@your-server:/opt/pa-backend/
+```
+
+#### On Server - Install/Update
+
+```bash
+# SSH to your server
+ssh user@your-server
+
+# Navigate to your app directory
+cd /opt/pa-backend/
+
+# Reinstall:
+sudo -u pa-user UV_CACHE_DIR=/var/cache/pa-user/ uv pip install --force-reinstall ./personal_analytics_backend-0.2.0-py3-none-any.whl
+```
+
+#### Restart Your systemd Service
+
+```bash
+sudo systemctl restart pa-backend
+
+# Check status
+sudo systemctl status your-service-name
+
+# View logs if needed
+sudo journalctl -u your-service-name -f
+```
 
