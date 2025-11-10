@@ -18,7 +18,7 @@ Note that the personal-analytics app has no built-in authentication. The reason 
 
 ## Deployment overview
 
-We are going for direct deployment on the machine. This will work on bare meta, a VM, or a virtual server.
+We are going for direct deployment on the machine. This will work on bare metal, a VM, or a virtual server.
 
 We will be running everything on this machine:
 
