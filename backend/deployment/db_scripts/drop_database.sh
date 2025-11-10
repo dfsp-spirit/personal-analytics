@@ -8,10 +8,16 @@
 #  3) the database server is running on the same machine
 #  4) peer authentication is enabled in postgres for local connections
 #
-# Usage: ./drop_database.sh
+# Usage: In the backend/ directory, run:
+#
+#   ./deployment/db_scripts/drop_database.sh
+#
 
 echo "=== Drop database of the personal-analytics web app, deleting all analytics data ==="
 echo "NOTE: This script is for development use only. It is not intended for production use."
+echo "Note that the PA_DATABASE_NAME and PA_DATABASE_USER read from the .env file are the ones that will be dropped by this script,"
+echo "not the superuser credentials that will be used by this script to connect to the postgres server."
+echo ""
 
 
 if [ ! -f ".env" ]; then
@@ -21,20 +27,29 @@ fi
 
 source ".env"   # Loads environment variables PA_DATABASE_NAME, PA_DATABASE_USER, PA_DATABASE_PASSWORD
 
+PA_DATABASE_HOST=${PA_DATABASE_HOST:-localhost}
+PA_DATABASE_PORT=${PA_DATABASE_PORT:-5432}
+
 # After sourcing the .env file, validate required variables
-if [ -z "$PA_DATABASE_NAME" ] || [ -z "$PA_DATABASE_USER" ] || [ -z "$PA_DATABASE_PASSWORD" ]; then
+if [ -z "$PA_DATABASE_NAME" ] || [ -z "$PA_DATABASE_USER" ]; then
     echo "ERROR: Missing required database configuration in '.env' file."
-    echo "Please ensure PA_DATABASE_NAME, PA_DATABASE_USER, and PA_DATABASE_PASSWORD are set."
+    echo "Please ensure PA_DATABASE_NAME and PA_DATABASE_USER are set."
     exit 1
 fi
 
-echo "Loaded env vars from '.env' file:"
+echo "Loaded env vars from '.env' file or defaults:"
+echo " PA_DATABASE_HOST='$PA_DATABASE_HOST'"
+echo " PA_DATABASE_PORT='$PA_DATABASE_PORT'"
 echo " PA_DATABASE_NAME='$PA_DATABASE_NAME'"
 echo " PA_DATABASE_USER='$PA_DATABASE_USER'"
-echo " PA_DATABASE_PASSWORD='(hidden)'"
 ## End of env file handling
 
-echo "Dropping database..."
+if [ "$PA_DATABASE_HOST" = "localhost" ] || [ "$PA_DATABASE_HOST" = "127.0.0.1" ]; then
+    echo "Dropping database on localhost..."
+else
+    echo "ERROR: Remote database hosts are not supported by this drop database script."
+    exit 1
+fi
 
 echo "WARNING: This will permanently delete the postgresql database '$PA_DATABASE_NAME' on localhost and all its data!"
 read -p "Are you sure you want to continue? (y/N): " confirm
@@ -45,6 +60,7 @@ if [[ $confirm != [yY] && $confirm != [yY][eE][sS] ]]; then
 fi
 
 echo "Dropping database '$PA_DATABASE_NAME'..."
+
 sudo -u postgres psql << EOF
 DROP DATABASE IF EXISTS $PA_DATABASE_NAME;
 DROP USER IF EXISTS $PA_DATABASE_USER;

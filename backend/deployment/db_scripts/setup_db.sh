@@ -13,10 +13,17 @@
 #  3) the database server is running on the same machine
 #  4) peer authentication is enabled in postgres for local connections
 #
-# Usage: ./setup_db.sh
+# Usage: in the backend/ directory, run:
+#
+#    ./deployment/db_scripts/setup_db.sh
+#
 
 echo "=== Database setup for personal-analytics ==="
-echo "NOTE: This script is for development use only. It is not intended for production use."
+echo " This script creates the database and database user with password as specified in the .env file."
+echo " It requires sudo access to the 'postgres' user on a local PostgreSQL server."
+echo "Note that the PA_DATABASE_USER and PA_DATABASE_PASSWORD read from the .env file are the ones that will be created by this script,"
+echo "not the superuser credentials that will be used by this script to connect to the postgres server."
+echo ""
 
 
 if [ ! -f ".env" ]; then
@@ -26,17 +33,23 @@ fi
 
 source ".env"   # Loads environment variables DATABASE_NAME, DATABASE_USER, DATABASE_PASSWORD
 
+PA_DATABASE_HOST=${PA_DATABASE_HOST:-localhost}
+PA_DATABASE_PORT=${PA_DATABASE_PORT:-5432}
+
 # After sourcing the .env file, validate required variables
 if [ -z "$PA_DATABASE_NAME" ] || [ -z "$PA_DATABASE_USER" ] || [ -z "$PA_DATABASE_PASSWORD" ]; then
     echo "ERROR: Missing required database configuration in '.env' file."
     echo "Please ensure PA_DATABASE_NAME, PA_DATABASE_USER, and PA_DATABASE_PASSWORD are set."
+    echo "Note that the PA_DATABASE_USER and PA_DATABASE_PASSWORD are the ones that will be created by this script,"
+    echo "not the superuser credentials that will be used by this script to connect to the postgres server."
     exit 1
 fi
 
-echo "Loaded env vars from '.env' file:"
+echo "Loaded env vars from '.env' file and defaults:"
+echo " PA_DATABASE_HOST='$PA_DATABASE_HOST'"
+echo " PA_DATABASE_PORT='$PA_DATABASE_PORT'"
 echo " PA_DATABASE_NAME='$PA_DATABASE_NAME'"
 echo " PA_DATABASE_USER='$PA_DATABASE_USER'"
-echo " PA_DATABASE_PASSWORD='(hidden)'"
 ## End of env file handling
 
 # Define SQL commands once
@@ -67,11 +80,18 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO ${PA_DATABAS
 SQL_EOF
 )
 
-echo "Setting up PostgreSQL database '${PA_DATABASE_NAME}' and user '${PA_DATABASE_USER}'..."
+echo "Setting up PostgreSQL database '${PA_DATABASE_NAME}' and new user '${PA_DATABASE_USER}' as specified in the .env file..."
 
-    sudo -u postgres psql -p ${PA_DATABASE_PORT} << EOF
-$SQL_COMMANDS
+if [ "$PA_DATABASE_HOST" = "localhost" ] || [ "$PA_DATABASE_HOST" = "127.0.0.1" ]; then
+    echo "Using peeer auth as system user postgres for local database server at host '$PA_DATABASE_HOST'..."
+    sudo -u postgres psql << EOF
+    $SQL_COMMANDS
 EOF
+else
+    echo "ERROR: Remote database hosts are not supported by this setup script."
+    exit 1
+fi
+
 if [ $? -ne 0 ]; then
     echo "ERROR: Failed to set up database or user. Please check the error messages above."
     exit 1

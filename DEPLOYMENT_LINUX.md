@@ -126,11 +126,13 @@ We will create a system service for it, along with a dedicated user, that ensure
 
 Create the installation directory for the backend application and copy the files there:
 
+We assume you have a repo clone of the personal analytics repo in `~/personal-analytics/` here, but you could of course just as well scp the files from your laptop if you don't want or have git on the server.
+
 ```sh
 # Copy backend app to installation directory, we will use /opt/pa-backend/
 sudo mkdir -p /opt/pa-backend
-#sudo cp -r ~/personal-analytics/backend/* /opt/pa-backend # Not needed anymore to copy individual files from repo, we install via wheel
-sudo cp personal_analytics_backend-0.1.0-py3-none-any.whl /opt/pa-backend
+sudo cp personal_analytics_backend-0.1.0-py3-none-any.whl /opt/pa-backend/   # copy wheel, ready for installation
+sudo cp  ~/personal-analytics/backend/deployment/gunicorn.conf /opt/pa-backend/ # Copy gunicorn production WSGI server config, adapt as needed.
 sudo cp ~/personal-analytics/backend/env.example /opt/pa-backend/.env
 sudo vim /opt/pa-backend/.env # Adapt settings in here, like database credentials.
 ```
@@ -150,20 +152,23 @@ Make sure you have hardened your postgresql installation for production, e.g., y
 * Set up firewall rules that additionally deny access to the postgresql port
 * Set up proper file permissions, e.g., hide database config files in /etc/ from normal users
 * Configure logging (and monitor the logs)
-* Think about and create a regular backup procedure
+* Think about and create a regular backup procedure, and test restoring the database from a backup.
 
-Then run the script to create the application-specfic database and the database user that comes with the backend.
+Then create the application-specfic database and the database user. There is a script for this that comes with the backend,
+in directory `deployment/db_scripts`, that you can use for this purpose. Make sure to copy it to the server
 
 The script uses sudo to change to the postgresql system user and then uses postgresql peer auth to connect to the
 database server as the database root user `postgres`. As this user, it creates the database, database user and password used by personal analytics.
 
-You need to run this script as root, or as a user that is allowed to sudo to the postgres systems user.
+You need to run this script as root, or as a user that is allowed to sudo to the postgres system user.
 
 NOTE: This script will set the database credentials you defined earlier in `/opt/pa-backend/.env`, so ensure they are strong and unique to this application. If you did not adapt them, you are now using the password that is public on the internet, in the source code of this repo, and your server may get compromized.
 
 ```sh
-sudo chmod +x /opt/pa-backend/setup_db.sh
-sudo /opt/pa-backend/setup_db.sh
+cp -r ~/personal-analytics/backend/deployment/ /opt/pa-backend/
+cd /opt/pa-backend/
+chmod +x ./deployment/db_scripts/setup_db.sh
+sudo ./deployment/db_scripts/setup_db.sh  # reads .env file from working dir, (i.e., /opt/pa-backend/)
 ```
 
 Now that we have the database ready, let us create a dedicated system user who will run the backend app and adapt the file system permissions accordingly.
@@ -194,7 +199,7 @@ Ensure you can start the backend manually:
 
 ```sh
 # Test running the backend standalone, without the service. (make sure to stop it with Ctrl+C when done)
-sudo -u pa-user UV_CACHE_DIR=/var/cache/pa-user/ uv run uvicorn personal_analytics_backend.api:app --host 127.0.0.1 --port 8000
+sudo -u pa-user UV_CACHE_DIR=/var/cache/pa-user/ uv run gunicorn -c gunicorn_conf.py personal_analytics_backend.api:app
 ```
 
 Once that works, setup a system service. E.g., for Ubuntu, copy the template service file from this repo, adapt it to your system and service user, then start it with systemctl. E.g.,
@@ -210,19 +215,18 @@ Now you can use standard systemctl commands to manage the service, e.g.,
 # Reload systemd to recognize the new service
 sudo systemctl daemon-reload
 
-# Enable to start on boot
-sudo systemctl enable pa-backend
-
-# Start the service now, stop it now, restart it
+# Start the service now:
 sudo systemctl start pa-backend
-sudo systemctl stop pa-backend
+
+# Check that it works: check status, test your app, view logs in case of problems:
+sudo systemctl status pa-backend   # see whether its running
+sudo journalctl -u pa-backend -f   # View logs
+
+# Fix all problems, then restart and test again until it works:
 sudo systemctl restart pa-backend
 
-# Check status
-sudo systemctl status pa-backend
-
-# View logs
-sudo journalctl -u pa-backend -f
+# Once everything works, enable it to start on boot
+sudo systemctl enable pa-backend
 ```
 
 There is one thing missing: as you have seen above, we are running uvicorn on the loopback interface only, so it is not accessible from the internet yet. We need to configure a reverse proxy in nginx, which forces users to go through nginx to reach the backend service for security reasons.
@@ -265,9 +269,9 @@ Note: These commands assume your user can write to `/opt/pa-backend/`. If that i
 ## Copy the wheel file (check dist/ for the exact filename)
 scp dist/personal_analytics_backend-0.2.0-py3-none-any.whl user@your-server:/opt/pa-backend/
 
-## ONLY Copy your .env file and gunicorn config if they changed, make sure to copy the correct (production) ones.
+## Careful: only copy your .env file and gunicorn config if they changed, make sure to copy the correct (production) one for the .env file!
 #scp .env user@your-server:/opt/pa-backend/
-#scp gunicorn_conf.py user@your-server:/opt/pa-backend/
+#scp deployment/gunicorn_conf.py user@your-server:/opt/pa-backend/
 ```
 
 #### On Server - Install/Update

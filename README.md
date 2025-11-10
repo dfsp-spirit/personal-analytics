@@ -78,7 +78,7 @@ Then setup the postgresql database:
 ```sh
 sudo apt install postgresql # installs db server and starts it with a default config
 cd backend/
-sudo ./setup_db.sh   # Create a database for our app using the settings from <repo_root>/backend/.env you adapted above.
+sudo ./deployment/db_scripts/setup_db.sh   # Create a database for our app using the settings from <repo_root>/backend/.env you adapted above.
 ```
 
 Then install:
