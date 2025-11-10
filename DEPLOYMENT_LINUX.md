@@ -8,12 +8,13 @@ This file gives an example of how to deploy the app (frontend, backend, database
 * You are running, or can install, postgresql and nginx. You could of course use apache2 instead of nginx, but you will have to adapt the web server configuration accordingly then.
 * You are familiar with running production systems in hostile environments like the internet, and know how to:
     - setup and maintain the system in a secure way
-    - modify the nginx configuration
+    - modify the nginx configuration and setup SSL
     - create postgresql databases
     - add new system users
     - create and manage system services
 * The server is public on the internet and has a domain associated with it, and SSL configured, e.g., via cert-bot for nginx. Nothing of that is technically required though.
-* The personal-analytics app has no authentication and no user layer. The reason is that each installation is typically customized, in the metrics it tracks, to the needs of one person. Therefore, the typical deployment will be put behind HTTP basic authentication (htpasswd) so that it is accessible from the internet (so you can fill it out from whereever you want), but still secured (so that others cannot access it even if they guess the URL on your server).
+
+Note that the personal-analytics app has no built-in authentication. The reason is that each installation is typically customized, in the metrics it tracks, to the needs of one person, and this person runs is on their own server. To deploy this in a convenient and secure way, the typical deployment will be put behind HTTP basic authentication. This allows you to have the app accessible from the internet (so you can fill it out from whereever you want), but still have it protected from unauthorized usage (so that others cannot access it even if they guess the URL on your server). HTTP basic authentication is perfectly fine if it is combined with HTTPS. Thankfully, let's encrypt and certbot make setting up SSL very easy these days, and there is no excuse anymore not to run SSL, even on a personal web server.
 
 ## Deployment overview
 
@@ -21,7 +22,7 @@ We are going for direct deployment on the machine. This will work on bare meta, 
 
 We will be running everything on this machine:
 
-* The frontend (pure JS/HTML/CSS) will be served statically be nginx
+* The frontend (pure JS/HTML/CSS) will be served statically by nginx
 
 * The backend (python package): will be installed into a virtual environment and served by uvicorn. It is deployed as a system service with auto-restart, auto-start on boot, etc.
 * The database: the postgresql database server will be running on the system. We will create a dedicated database and database user for this app.
