@@ -154,8 +154,8 @@ Make sure you have hardened your postgresql installation for production, e.g., y
 * Configure logging (and monitor the logs)
 * Think about and create a regular backup procedure, and test restoring the database from a backup.
 
-Then create the application-specfic database and the database user. There is a script for this that comes with the backend,
-in directory `deployment/db_scripts`, that you can use for this purpose. Make sure to copy it to the server
+Then create the application-specfic database and the database user. There is a script for this that comes with the repo,
+in directory `database/`, that you can use for this purpose.
 
 The script uses sudo to change to the postgresql system user and then uses postgresql peer auth to connect to the
 database server as the database root user `postgres`. As this user, it creates the database, database user and password used by personal analytics.
@@ -165,10 +165,8 @@ You need to run this script as root, or as a user that is allowed to sudo to the
 NOTE: This script will set the database credentials you defined earlier in `/opt/pa-backend/.env`, so ensure they are strong and unique to this application. If you did not adapt them, you are now using the password that is public on the internet, in the source code of this repo, and your server may get compromized.
 
 ```sh
-cp -r ~/personal-analytics/backend/deployment/ /opt/pa-backend/
-cd /opt/pa-backend/
-chmod +x ./deployment/db_scripts/setup_db.sh
-sudo ./deployment/db_scripts/setup_db.sh  # reads .env file from working dir, (i.e., /opt/pa-backend/)
+cd ~/personal-analytics/database/
+./create_pa_db.sh /opt/pa-backend/.env
 ```
 
 Now that we have the database ready, let us create a dedicated system user who will run the backend app and adapt the file system permissions accordingly.

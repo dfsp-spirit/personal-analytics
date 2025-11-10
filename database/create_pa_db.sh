@@ -13,9 +13,9 @@
 #  3) the database server is running on the same machine
 #  4) peer authentication is enabled in postgres for local connections
 #
-# Usage: in the backend/ directory, run:
+# Usage: in the repo root, as a user with sudo access to the postgres system user, run:
 #
-#    ./deployment/db_scripts/setup_db.sh
+#    ./database/create_pa_db.sh ./backend/.env
 #
 
 echo "=== Database setup for personal-analytics ==="
@@ -26,10 +26,22 @@ echo "not the superuser credentials that will be used by this script to connect 
 echo ""
 
 
-if [ ! -f ".env" ]; then
-    echo "ERROR: .env file not found. You need to create it first from the '.env.example' template file."
+# Default .env location
+DEFAULT_ENV_PATH=".env"
+
+# Allow custom .env path
+ENV_PATH="${1:-$DEFAULT_ENV_PATH}"
+
+if [ ! -f "$ENV_PATH" ]; then
+    echo "ERROR: .env file not found at path: '$ENV_PATH'"
+    echo "Please create it first or specify a custom path:"
+    echo "  ./create_pa_db.sh /path/to/your/.env"
     exit 1
 fi
+
+echo "Loading configuration from env file: '$ENV_PATH'"
+source "$ENV_PATH"
+
 
 source ".env"   # Loads environment variables DATABASE_NAME, DATABASE_USER, DATABASE_PASSWORD
 
