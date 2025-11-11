@@ -35,9 +35,6 @@ env/
 *.db
 *.sqlite3
 
-# UV
-uv.lock
-
 # IDE
 .vscode/
 .idea/
