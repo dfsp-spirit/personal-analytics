@@ -37,7 +37,7 @@ cd personal-analytics/   # known as <repo_root> from now on.
 Now we need to configure the frontend, the only thing to do is to set the URL at which the backend API is available:
 
 
-Open the file [frontend/settings.gs](./frontend/settings.js) in your favourite text editor or IDE and make sure the `API_BASE_URL` setting is pointing at `'http://localhost:8000'`;
+Open the file [frontend/settings.gs](./frontend/settings.js) in your favourite text editor or IDE and make sure the `API_BASE_URL` setting is pointing at `'http://localhost:8000'`.
 
 
 That's all you need for the frontend setup.
@@ -74,6 +74,8 @@ cp backend/.env.example backend/.env
 vim backend/.env # Adapt it!
 ```
 
+In the `.env` file, you can leave the database credentials as they are for development, but make sure that `PA_ALLOWED_ORIGINS`, which expects a JSON array of strings as a vale, includes the origin from where you serve the frontend. This is `http://localhost:3000` in this guide (see section "Running the frontend" above), so make sure there is a line like this in there: `PA_ALLOWED_ORIGINS=["http://localhost:3000", "http://127.0.0.1:3000"]`.
+
 
 Then setup the postgresql database:
 
@@ -106,9 +108,11 @@ That's it for the backend installation.
 To run it once its installed:
 
 ```sh
-# still in <repo>/backend/
+# still in <repo_root>/backend/
 uv run uvicorn personal_analytics_backend.api:app --reload --host 127.0.0.1 --port 8000
 ```
+
+Note that the settings in that command match what we configured in the frontend's `settings.js` file above as `API_BASE_URL`.
 
 You can now access your services:
 
@@ -119,6 +123,17 @@ You can now access your services:
 
 
 ## Quick Documentation
+
+
+### Running the App: Troubleshooting FAQ
+
+* When opening the web app in the browser, I see no data in the form and I cannot submit. In web developer tools console, I see a network error with reason 'CORS request not HTTP'. What does this mean?
+    - There are different options why this happens, but in general some resource you load in your frontend code is not loaded from HTTP/HTTPS scheme (a link starting with `http://` or `https://`), but something different, e.g., from `file:///` or something implicitely interpreted as such. This can happen if you give, in the `frontend/settings.js` file, something like `const API_BASE_URL = 'localhost:8000';` instead of `const API_BASE_URL = 'http://localhost:8000';` or `const API_BASE_URL = 'https://your-domain.org:8000';`. It can also happen if you really load something via a `file:///` URL, which can easily be checked by something like `fgreg -rni 'file://' frontend/` in the shell.
+* I get a similar error as above, but in the console I see the reason given as something like `Mixed Content: The page at 'page' was loaded over HTTPS, but requested an insecure resource` or similar, depending on the browser used. Why?
+    - You have most likely configured SSL/HTTPS for your website, but the frontend loads some resources via a HTTP scheme. E.g., the frontend is accessible at https://your-domain.org/pa/, but it connects to a backend API URL configured as `API_BASE_URL = 'http://localhost:8000'` instead of `https://localhost:8000'`. It could also be any other resource you load, like a javascript file sourced from a remote server via a HTTP scheme instead of HTTPS.
+* I see a CORS error in the browser console that says the origin is not allowed. What is wrong?
+    - In your backend, you will need to explicitely allow requests from your frontend domain. This is configured in the `backend/.env` file you were asked to adapt during backend setup above. You will need to adapt this line to your backend scheme and location, and it expects a JSON array of strings. So for example, in production, if the frontend is accessible to users at `https://your-domain.org/pa/`, this needs to be `allow_origins=["https://your-domain.org"]`. Note that CORS origins are a combination of scheme, host, and optionally port, but do not include the path (the `/pa/` in this case). If you omit the port, for scheme `https://`, the assumed port is `443`, for `http://`, it is `80`. For local development, you would set this to `allow_origins=["http://127.0.0.1:3000", "http://localhost:3000"]`.
+    - Alternatively, a critical backend error may have occurred early on, and under that condition, the backend failed to set the CORS headers when sending the error message, even though you have configured them correctly. In that case, the CORS error is a red herring, and the real issue is something else. To be sure, check the backend logs, where you should find the real source of the error. If you started the backend in dev mode as explained above, the logs can be seen live in the terminal in which the backend is running.
 
 ### Customizing the App
 
@@ -137,18 +152,8 @@ You can now access your services:
         * In [styles.css](./frontend/styles.css), add the new style definitions for your component
     - As descibed in the first question above, you will also need to adapt the database model to make sure the new field that will be send to the backend is recognized and saved properly, and adapt the data export functions.
 
-### Troubleshooting FAQ
 
-* When opening the web app in the browser, I see no data in the form and I cannot submit. In web developer tools console, I see a network error with reason 'CORS request not HTTP'. What does this mean?
-    - There are different options why this happens, but in general some resource you load in your frontend code is not loaded from HTTP/HTTPS scheme (a link starting with `http://` or `https://`), but something different, e.g., from `file:///` or something implicitely interpreted as such. This can happen if you give, in the `frontend/settings.js` file, something like `const API_BASE_URL = 'localhost:8000';` instead of `const API_BASE_URL = 'http://localhost:8000';` or `const API_BASE_URL = 'https://your-domain.org:8000';`. It can also happen if you really load something via a `file:///` URL, which can easily be checked by something like `fgreg -rni 'file://' frontend/` in the shell.
-* I get a similar error as above, but in the console I see the reason given as something like `Mixed Content: The page at 'page' was loaded over HTTPS, but requested an insecure resource` or similar, depending on the browser used. Why?
-    - You have most likely configured SSL/HTTPS for your website, but the frontend loads some resources via a HTTP scheme. E.g., the frontend is accessible at https://your-domain.org/pa/, but it connects to a backend API URL configured as `API_BASE_URL = 'http://localhost:8000'` instead of `https://localhost:8000'`. It could also be any other resource you load, like a javascript file sourced from a remote server via a HTTP scheme instead of HTTPS.
-* I see a CORS error in the browser console that says the origin is not allowed. What is wrong?
-    - In your backend, you will need to explicitely allow requests from your frontend domain. This is configured in the `backend/.env` file you were asked to adapt during backend setup above. You will need to adapt this line to your backend scheme and location, and it expects a JSON array of strings. So for example, in production, if the frontend is accessible to users at `https://your-domain.org/pa/`, this needs to be `allow_origins=["https://your-domain.org"]`. Note that CORS origins are a combination of scheme, host, and optionally port, but do not include the path (the `/pa/` in this case). If you omit the port, for scheme `https://`, the assumed port is `443`, for `http://`, it is `80`. For local development, you would set this to `allow_origins=["http://127.0.0.1:3000", "http://localhost:3000"]`.
-    - Alternatively, a critical backend error may have occurred early on, and under that condition, the backend failed to set the CORS headers when sending the error message, even though you have configured them correctly. In that case, the CORS error is a red herring, and the real issue is something else. To be sure, check the backend logs, where you should find the real source of the error. If you started the backend in dev mode as explained above, the logs can be seen live in the terminal in which the backend is running.
-
-
-## Deployment options
+### Deployment Options
 
 There are many deployment strategies, you can read about one option for deployment directly on Linux in [DEPLOYMENT_LINUX.md](./DEPLOYMENT_LINUX.md).
 
