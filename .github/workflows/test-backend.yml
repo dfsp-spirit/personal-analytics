@@ -59,24 +59,3 @@ jobs:
         PA_DEBUG: "false"
       run: |
         uv run pytest tests/ -v
-
-    - name: Run tests with coverage
-      working-directory: ./backend
-      env:
-        PA_DATABASE_USER: postgres
-        PA_DATABASE_PASSWORD: postgres
-        PA_DATABASE_HOST: localhost
-        PA_DATABASE_PORT: 5432
-        PA_DATABASE_NAME: test_db
-        PA_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-        PA_ALLOWED_ORIGINS: '["http://localhost:3000", "http://127.0.0.1:3000"]'
-        PA_DEBUG: "false"
-      run: |
-        uv run pytest tests/ --cov=src/personal_analytics_backend --cov-report=xml
-
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./backend/coverage.xml
-        flags: unittests
-        name: codecov-umbrella
