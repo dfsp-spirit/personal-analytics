@@ -8,10 +8,12 @@ Whatever you use it for, you can use this to understand trends over time, to loo
 
 In any case, be careful when drawing conclusions. Don't take it too seriously unless you have put a lot of thought into data quality, filtering outliers, identifying and tracking possible confounding variables, interpolating missing values, etc. Basically follow good study design and data science practices, which will require domain knowledge.
 
+![CI Tests](https://github.com/dfsp-spirit/personal-analytics/actions/workflows/test-backend.yml/badge.svg)
 
 ## Development state
 
-Quite early, do not use in production yet.
+
+Quite early, things may change without notice. Do not use in production yet unless you're feeling brave.
 
 
 ## Development setup
