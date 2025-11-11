@@ -1,6 +1,6 @@
 [project]
 name = "personal-analytics-backend"
-version = "0.3.0"
+dynamic = ["version"] # see [tool.hatch.version] section below
 description = "Backend for personal health analytics"
 authors = [
     {name = "Tim Schäfer", email = "ts+code@rcmd.org"},
@@ -30,3 +30,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/personal_analytics_backend"]
+
+[tool.hatch.version]
+path = "src/personal_analytics_backend/__init__.py"  # reads __version__ variable from this file
