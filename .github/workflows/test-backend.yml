@@ -44,6 +44,7 @@ jobs:
       working-directory: ./backend
       run: |
         uv sync --dev
+        uv add pytest black isort httpx --dev
 
     - name: Run tests
       working-directory: ./backend
