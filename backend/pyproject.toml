@@ -29,3 +29,8 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/personal_analytics_backend"]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+]
