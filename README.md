@@ -84,10 +84,17 @@ sudo apt install postgresql # installs db server and starts it with a default co
 Then install:
 
 ```sh
+cd backend/
 uv venv   # Create virtual env and install deps with uv
 
 # Install package in editable mode
 uv pip install -e .
+```
+
+Verify that it is operational by running the unit tests:
+
+```sh
+uv run pytest
 ```
 
 That's it for the backend installation.
