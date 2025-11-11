@@ -87,8 +87,8 @@ Then install:
 cd backend/
 uv venv   # Create virtual env and install deps with uv
 
-# Install package in editable mode
-uv pip install -e .
+# Install package in editable mode with dev dependencies
+uv pip install -e ".[dev]"
 ```
 
 Verify that it is operational by running the unit tests:
